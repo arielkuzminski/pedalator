@@ -21,10 +21,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     src = ap.add_argument_group("where the rider data comes from")
     src.add_argument("--remote", action="store_true",
-                     help="phone mode: a phone or laptop with Web Bluetooth reads the trainer (for PCs without BLE)")
-    src.add_argument("--click", choices=("auto", "off"), default="auto",
-                     help="read a Zwift Click over this PC's Bluetooth: auto = when the PC reads the trainer itself "
-                          "(not with --remote, where the phone page reads it), off = never")
+                     help="phone mode: a phone or laptop with Web Bluetooth reads the trainer and the Click "
+                          "(for PCs without BLE); shorthand for --trainer phone")
+    src.add_argument("--trainer", choices=("pc", "phone"),
+                     help="who reads the trainer: this PC's Bluetooth, or a phone/laptop page (default: pc, "
+                          "or phone with --remote)")
+    src.add_argument("--click", choices=("auto", "pc", "phone", "off"), default="auto",
+                     help="who reads the Zwift Click: pc, phone (a phone/laptop page), off; auto = the same as the "
+                          "trainer. Mix them, e.g.  --trainer pc --click phone")
     src.add_argument("--simulate", action="store_true", help="no trainer: a made-up rider (try the dashboard or a game)")
     src.add_argument("--address", help="Bluetooth address of the trainer (default: scan for the first FTMS trainer)")
     src.add_argument("--ip", help="this PC's LAN address for the phone certificate (default: autodetect)")
@@ -61,6 +65,18 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def resolve_sources(trainer: str | None, click: str, remote: bool, simulate: bool) -> tuple[str, str]:
+    """Who reads the trainer ('pc' or 'phone') and who reads the Click ('pc', 'phone' or 'off').
+
+    ``--remote`` means the phone reads the trainer; ``--click auto`` follows the trainer (and is off for a
+    simulated rider unless a phone is in play).
+    """
+    t = trainer or ("phone" if remote else "pc")
+    if click == "auto":
+        click = "phone" if t == "phone" else ("off" if simulate else "pc")
+    return t, click
+
+
 async def bridge(args: argparse.Namespace) -> None:
     from . import keys as keyout
     from .certs import lan_ip
@@ -78,10 +94,14 @@ async def bridge(args: argparse.Namespace) -> None:
     if args.difficulty is not None:
         state["difficulty"], state["preset"] = args.difficulty, "custom"
 
+    trainer, click = resolve_sources(args.trainer, args.click, args.remote, args.simulate)
     start_dashboard(args.dashboard_port)
-    if args.remote:
+    if trainer == "phone":
         state.update(trainer_name="(phone)", simulate=False)
-        start_phone_servers(args.ip or lan_ip(), args.data_dir or user_data_dir(), args.phone_port, args.ca_port)
+    if "phone" in (trainer, click):
+        start_phone_servers(args.ip or lan_ip(), args.data_dir or user_data_dir(), args.phone_port, args.ca_port,
+                            accept={"trainer": trainer == "phone", "click": click == "phone"})
+    log(f"trainer: {trainer if not args.simulate else 'simulated'} · Zwift Click: {click}")
     loop = asyncio.get_running_loop()
     await loop.create_datagram_endpoint(GameUdp, local_addr=("127.0.0.1", args.game_port))
     tasks = [asyncio.create_task(sampler()), asyncio.create_task(console_status()),
@@ -106,14 +126,14 @@ async def bridge(args: argparse.Namespace) -> None:
         log(f"driving keys ({args.keyset}) go to the window in front: throttle by power, steering/brake by Zwift Click")
         tasks += [asyncio.create_task(keyout.throttle_loop()), asyncio.create_task(keyout.buttons_loop())]
 
-    if args.click == "auto" and not args.remote and not args.simulate:
+    if click == "pc":
         from .click import click_loop
         tasks.append(asyncio.create_task(click_loop()))
 
     if args.simulate:
         from .simulate import simulate
         tasks.append(asyncio.create_task(simulate()))
-    elif not args.remote:
+    elif trainer == "pc":
         from .ble import trainer_loop
         tasks.append(asyncio.create_task(trainer_loop(args.address)))
     await asyncio.gather(*tasks)

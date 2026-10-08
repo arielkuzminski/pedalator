@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): a hybrid mode (trainer on the PC, Click on a laptop), profiles with remappable keys that you can import and export, a wizard for adding a new game.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): profiles with remappable keys that you can import and export, and a wizard for adding a new game.
 
 ## How it works
 

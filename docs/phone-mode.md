@@ -61,6 +61,20 @@ The page shows power, cadence, grade and the pressed buttons. The three lights a
 
 Keep the page open and **in front** with the screen on — phones suspend background pages, which stops the data. If you want to film yourself with the phone, use a second device for the Bluetooth, or a [USB adapter on the PC](#why-not-just-use-the-phone-camera).
 
+## Hybrid mode: the PC reads one thing, the phone the other
+
+You do not have to give the phone everything. Say who reads what:
+
+```bash
+python -m pedalator --trainer pc --click phone      # PC's Bluetooth for the trainer, a laptop only for the Click
+python -m pedalator --trainer phone --click pc      # the other way round
+python -m pedalator --trainer pc --click off        # no Click at all
+```
+
+`--remote` is the shorthand for `--trainer phone` (and the phone reads the Click too). `--click auto` (the default) follows the trainer.
+
+The phone page asks the PC what it wants and **hides the rest**: with `--trainer pc --click phone` it shows only the Click button, and the PC refuses trainer data from the page (HTTP 409), so two sources can never fight. Typical uses: the PC's adapter reaches the trainer but not the Click's corner of the room, or you want the phone free for filming and a laptop does the Click.
+
 ## Notes
 
 - The URL (token) stays the same after restarts. If the PC's address changes, restart Pedalator: it makes a new certificate, and the CA on the phone stays valid.

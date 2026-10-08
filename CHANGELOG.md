@@ -9,8 +9,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - **Zwift Click over the PC's own Bluetooth** (`pedalator/click.py`): with a BLE adapter, no phone is needed for the Click. Flag `--click auto|off`; the dashboard shows a *controls* light; trainer and Click scans never overlap. Not yet tested on a real controller through the PC.
 
+- **Hybrid mode:** `--trainer pc|phone` and `--click pc|phone|off` choose who reads the trainer and the Click (`--remote` stays as the shorthand). The phone page hides what the PC reads itself, and the PC refuses data it does not want.
+
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
-- Hybrid mode: the trainer on the PC, the Click on a laptop or phone.
 - Profiles: import and export of a game's configuration, remappable keys in the dashboard.
 - A wizard for adding a new game.
 

@@ -29,6 +29,7 @@ RAW_BUTTONS = {"LEFT", "RIGHT", "UP", "DOWN", "A", "B", "Y", "Z", "PLUS", "MINUS
 
 class PhoneHandler(BaseHTTPRequestHandler):
     token = ""
+    accept = {"trainer": True, "click": True}      # what this PC expects from the phone page (hybrid mode)
     protocol_version = "HTTP/1.1"      # keep-alive: one TLS handshake for many requests
     timeout = 60                       # an idle kept-alive connection ends its thread after a minute
 
@@ -63,7 +64,7 @@ class PhoneHandler(BaseHTTPRequestHandler):
             except OSError:
                 self._send(404, "phone.html missing", "text/plain")
         elif path == "/phone/ping":
-            self._send(200, '{"ok":true}')
+            self._send(200, json.dumps({"ok": True, **self.accept}))   # the page hides what the PC does not want
         elif path == "/phone/events":
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
@@ -86,12 +87,24 @@ class PhoneHandler(BaseHTTPRequestHandler):
         else:
             self._send(404, "{}")
 
+    def _unwanted(self, path: str, body: dict) -> str:
+        """'trainer' / 'click' when the page sends data for a source this PC reads itself, else ''."""
+        kind = body.get("kind") if path == "/phone/status" else None
+        if path == "/phone/data" or kind in ("connected", "disconnected", "cp"):
+            return "" if self.accept["trainer"] else "trainer"
+        if path == "/phone/buttons" or kind == "click":
+            return "" if self.accept["click"] else "Zwift Click"
+        return ""
+
     def do_POST(self):
         path = self._route()
         if path is None:
             return
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            unwanted = self._unwanted(path, body)
+            if unwanted:
+                return self._send(409, json.dumps({"error": f"this PC reads the {unwanted} itself"}))
             if path == "/phone/data":
                 on_bike_data(None, bytearray.fromhex(body["hex"]))
                 state["connected"] = True
@@ -181,7 +194,7 @@ class CaHandler(BaseHTTPRequestHandler):
 
 
 def start_phone_servers(ip: str, cert_dir: Path, phone_port: int = PHONE_PORT, ca_port: int = CA_PORT,
-                        host: str = "0.0.0.0") -> tuple[str, list[ThreadingHTTPServer]]:
+                        host: str = "0.0.0.0", accept: dict | None = None) -> tuple[str, list[ThreadingHTTPServer]]:
     """Start the HTTPS and CA servers. Returns the phone token and the servers (so tests can shut them down)."""
     crt, key = ensure_certs(cert_dir, ip)
     token = load_token(cert_dir)
@@ -189,7 +202,7 @@ def start_phone_servers(ip: str, cert_dir: Path, phone_port: int = PHONE_PORT, c
     ctx.load_cert_chain(crt, key)
 
     tls = type("BoundTlsServer", (TlsServer,), {"ctx": ctx})
-    phone = type("BoundPhoneHandler", (PhoneHandler,), {"token": token})
+    phone = type("BoundPhoneHandler", (PhoneHandler,), {"token": token, "accept": accept or {"trainer": True, "click": True}})
     ca = type("BoundCaHandler", (CaHandler,), {"cert_dir": cert_dir})
 
     servers: list[ThreadingHTTPServer] = []

@@ -6,7 +6,7 @@ Pedalator works today with [OpenMW](games/openmw.md), [openOMSI](games/openomsi.
 
 The five milestones the maintainer plans to build first, in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
 
-> Suggested order: **5 ✅ → 1 (built, awaiting a hardware test) → 2 → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
+> Suggested order: **5 ✅ → 1 (built, awaiting a hardware test) → 2 (built) → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
 
 ### 1. Zwift Click over the PC's Bluetooth (no phone) — built, needs a hardware test
 
@@ -20,13 +20,15 @@ The five milestones the maintainer plans to build first, in the order of the sug
 
 **Status.** Built (`pedalator/click.py`) and tested against a fake `bleak` and shared decoder vectors; **not yet tried on a real Click through the PC's adapter**. Scans of the trainer and the Click are serialised.
 
-### 2. Hybrid mode: trainer on the PC, Click on a laptop or phone
+### 2. Hybrid mode: trainer on the PC, Click on a laptop or phone — ✅ built
 
 **Why.** The PC's adapter may reach the trainer but not the Click's corner of the room, or you want the phone free for filming.
 
 **How.** Replace the all-or-nothing `--remote` by `--trainer pc|phone` and `--click pc|phone|off` (`--remote` stays as "both from the phone"). The phone page learns `?only=click` and `?only=trainer`, hides the other connect button and sends only its own data.
 
 **Done when.** `pedalator --trainer pc --click phone` runs, with the laptop connecting only the Click.
+
+**Status.** Built. Instead of a `?only=` parameter the page asks the PC what it wants (`/phone/ping`) and hides the rest; the PC refuses data it does not want. Needs a hardware test together with milestone 1.
 
 ### 3. Profiles: import and export of a game's configuration, remappable keys in the dashboard
 

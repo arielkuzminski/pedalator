@@ -59,6 +59,7 @@ Add `--remote` to any of these if the phone or laptop does the Bluetooth.
 | `--ftp 220` | your FTP in watts, for the power zones on the dashboard |
 | `--pmax 250` | power that means "full throttle" at gain ×1 |
 | `--address AA:BB:...` | connect to this trainer instead of scanning |
+| `--trainer pc\|phone`, `--click pc\|phone\|off` | who reads the trainer and the Click ([hybrid mode](phone-mode.md#hybrid-mode-the-pc-reads-one-thing-the-phone-the-other)) |
 | `--dashboard-port 8765` | the dashboard's port |
 | `python -m pedalator --help` | everything |
 

@@ -92,10 +92,12 @@ The mod prints `PEDALATOR grade=<percent>` into `openmw.log` about four times a 
 |---|---|
 | `GET /phone` | the page |
 | `GET /phone/events` | SSE twice a second: `{"grade": 2.4, "difficulty": 0.4, "notice": ""}` |
-| `GET /phone/ping` | `{"ok":true}` |
+| `GET /phone/ping` | `{"ok":true,"trainer":true,"click":false}`: what this PC wants from the page (hybrid mode); the page hides the rest |
 | `POST /phone/data` `{"hex":"…"}` | a raw Indoor Bike Data packet |
 | `POST /phone/buttons` `{"pressed":[…],"raw":[…]}` | Click state |
 | `POST /phone/status` `{"kind":"connected\|disconnected\|cp\|log",…}` | housekeeping |
+
+In hybrid mode the PC answers **409** to data for a source it reads itself (`/phone/data`, trainer status, `/phone/buttons`, Click status).
 
 ## Why these choices
 

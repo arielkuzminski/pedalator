@@ -20,6 +20,7 @@ Start with the console: Pedalator prints what it sees, and the dashboard's **Deb
 | The page opens but says *No Web Bluetooth* | Safari has none: open it in **Bluefy** (iPhone) or Chrome. The page must be `https://`. |
 | Nothing opens at all | Windows Firewall blocks Python on private networks, the phone is on another network, or the address printed is a virtual adapter's (VPN, WSL, Hyper-V): pass `--ip <your LAN address>`. |
 | *PC: no connection* appears after some minutes on a laptop | Fixed in recent versions (the page now has timeouts, one in-flight data request and a probe). The page's log shows the exact error; open an issue with it. |
+| The phone page shows only one connect button | That is hybrid mode: the PC reads the other device itself (`--trainer` / `--click`). Run without them, or with `--remote`, for everything on the phone. |
 | Data stops when you switch apps on the phone | Phones suspend background pages. Keep the page in front, or put the Bluetooth on a laptop / USB adapter. |
 | *WinError 10048* (address already in use) at start | Another Pedalator is running (maybe in the background). Stop it with `Ctrl+C`. |
 
