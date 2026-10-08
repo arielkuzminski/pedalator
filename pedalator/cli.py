@@ -26,6 +26,8 @@ def build_parser() -> argparse.ArgumentParser:
     src.add_argument("--address", help="Bluetooth address of the trainer (default: scan for the first FTMS trainer)")
     src.add_argument("--ip", help="this PC's LAN address for the phone certificate (default: autodetect)")
     src.add_argument("--data-dir", type=Path, help="where certificates and the phone token are kept")
+    src.add_argument("--phone-port", type=int, default=8766, help="(phone mode) HTTPS port for the phone page (default 8766)")
+    src.add_argument("--ca-port", type=int, default=8767, help="(phone mode) HTTP port that serves the certificate (default 8767)")
 
     game = ap.add_argument_group("the game")
     game.add_argument("--target", choices=("keys", "openmw", "udp"), default=DEFAULT_TARGET,
@@ -75,7 +77,7 @@ async def bridge(args: argparse.Namespace) -> None:
     start_dashboard(args.dashboard_port)
     if args.remote:
         state.update(trainer_name="(phone)", simulate=False)
-        start_phone_servers(args.ip or lan_ip(), args.data_dir or user_data_dir())
+        start_phone_servers(args.ip or lan_ip(), args.data_dir or user_data_dir(), args.phone_port, args.ca_port)
     loop = asyncio.get_running_loop()
     await loop.create_datagram_endpoint(GameUdp, local_addr=("127.0.0.1", args.game_port))
     tasks = [asyncio.create_task(sampler()), asyncio.create_task(console_status())]

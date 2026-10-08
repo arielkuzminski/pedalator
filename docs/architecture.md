@@ -56,7 +56,7 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 | `127.0.0.1:27101/udp` | UDP | this PC | Pedalator sends `power=…` (for a plugin that can listen) |
 | `--udp-out` (27200) | UDP | this PC | JSON datagrams of the `udp` target |
 
-The LAN ports exist only with `--remote`.
+The LAN ports exist only with `--remote`; change them with `--phone-port` and `--ca-port`.
 
 ## Formats
 

@@ -66,6 +66,7 @@ def throttle_for(power: float, floor: float = 15.0) -> float:
 
 def snapshot() -> dict:
     """What the dashboard shows: the state plus ages, history and the log."""
+    effective_grade()                      # the grade shown is the one in force right now, not a second ago
     now = time.time()
     s = dict(state)
     s["age_packet"] = round(now - s["t_packet"], 1) if s["t_packet"] else None
