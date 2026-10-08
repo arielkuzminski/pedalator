@@ -164,7 +164,12 @@ def main(argv: list[str]) -> int:
     pd = pfs.add_parser("delete", help="delete a profile you saved")
     pd.add_argument("id")
 
+    from . import newgame
+    newgame.add_parser(sub)
+
     args = ap.parse_args(argv)
+    if args.cmd == "new-game":
+        return newgame.main(args)
     if args.cmd == "profile":
         return profile_command(args)
     if args.cmd == "install":

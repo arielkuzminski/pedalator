@@ -62,6 +62,8 @@ Built-in profiles ship in the package (`morrowind`, `omsi`, `generic-wasd`); you
 
 **Depends on** milestone 3.
 
+**Status.** ✅ The wizard is done (`pedalator new-game`, see [new-game.md](new-game.md)): keys-only games need no code, UDP games get a listener and a Lua sketch. Not built yet: the dashboard version, the test panel with key capture, and the socket-less file/log template.
+
 **Done when.** A new keys-only game can be added through the wizard without touching Python.
 
 ### 5. Click + and − change the trainer's difficulty — ✅ done

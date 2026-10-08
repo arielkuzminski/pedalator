@@ -5,6 +5,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- **`pedalator new-game`:** a wizard that sets up a new game: a saved profile, a README with the steps and, for UDP games, a listener and a Lua sketch. See [docs/new-game.md](docs/new-game.md).
 - **Profiles:** one JSON file per game or setup holds the button map, the keys, the ride defaults and game options. A new **Controls** tab in the dashboard remaps buttons and keys live and saves, exports and imports profiles; `--profile` and `pedalator profile list|show|export|import|delete` on the command line; the OpenMW mod reads its tuning from a config file. See [docs/profiles.md](docs/profiles.md).
 - The dashboard now refuses requests with a foreign `Host` header and non-JSON `POST`s, so another web page cannot drive it.
 
@@ -15,7 +16,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Hybrid mode:** `--trainer pc|phone` and `--click pc|phone|off` choose who reads the trainer and the Click (`--remote` stays as the shorthand). The phone page hides what the PC reads itself, and the PC refuses data it does not want.
 
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
-- A wizard for adding a new game.
+- Dashboard version of the wizard with a test panel.
 
 ## [0.1.0] — first public release
 

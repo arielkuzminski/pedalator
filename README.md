@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): a wizard for adding a new game.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): a dashboard version of the new-game wizard, and hardware tests of the direct Bluetooth path.
 
 ## How it works
 
@@ -133,6 +133,7 @@ More in [Zwift Click](docs/zwift-click.md).
 | [Phone mode](docs/phone-mode.md) | iPhone, Android or a laptop as the Bluetooth radio; the one-time certificate step |
 | [OpenMW / Morrowind](docs/games/openmw.md) · [openOMSI](docs/games/openomsi.md) · [Keys and UDP](docs/games/keys-and-udp.md) | per-game setup |
 | [Profiles](docs/profiles.md) | remap buttons and keys, import and export a game's setup |
+| [New game wizard](docs/new-game.md) | `pedalator new-game`: set up another game in minutes |
 | [Zwift Click](docs/zwift-click.md) | buttons, how the protocol works |
 | [Architecture](docs/architecture.md) | channels, ports, file formats |
 | [Troubleshooting](docs/troubleshooting.md) · [FAQ](docs/faq.md) | when something is wrong |

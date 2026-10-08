@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="pedalator",
         description="Ride games with your smart trainer. Run without a sub-command to start the bridge.",
-        epilog="Other commands:  pedalator install openmw|openomsi   pedalator build-bike   "
+        epilog="Other commands:  pedalator install openmw|openomsi   pedalator build-bike   pedalator new-game   "
                "pedalator profile list|show|export|import|delete   (see --help of each)")
     ap.add_argument("--version", action="version", version=f"pedalator {__version__}")
 
@@ -181,7 +181,7 @@ async def bridge(args: argparse.Namespace) -> None:
 
 def main(argv: list[str] | None = None) -> None:
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv and argv[0] in ("install", "build-bike", "profile"):
+    if argv and argv[0] in ("install", "build-bike", "profile", "new-game"):
         from . import install
         sys.exit(install.main(argv))
     args = build_parser().parse_args(argv)
