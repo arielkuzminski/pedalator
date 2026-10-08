@@ -1,0 +1,21 @@
+name: Game idea
+description: Suggest or offer to build support for another game
+labels: [game]
+body:
+  - type: input
+    id: game
+    attributes:
+      label: Game
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How could it be connected?
+      description: Does it have mods or scripting (with sockets? files?), a telemetry feed, or only keyboard input? Links help.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Are you willing to help?
+      options:
+        - label: I can build or test it

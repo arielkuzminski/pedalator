@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Pedalator runtime data: private keys, tokens, logs. NEVER commit these.
+certs/
+*.key
+*.pem
+*.crt
+token.txt
+*.log
+bridge.log
+
+# Game files that belong to somebody else (generated on the user's machine, never committed)
+**/HC_Fahrrad/
+*.o3d
+*.dds
+*.bus
+*.osc
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

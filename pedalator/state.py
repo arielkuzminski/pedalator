@@ -1,0 +1,82 @@
+"""The one shared state of a running bridge, its log, and the riding modes.
+
+Everything that talks to the outside (the trainer, the phone, the game, the dashboard) reads and writes
+this module's ``state`` dict; the dashboard serves a snapshot of it.
+"""
+from __future__ import annotations
+
+import collections
+import time
+
+state: dict = {
+    "power": 0, "cadence": 0.0, "speed": 0.0, "distance": 0, "resistance": None, "hr": None,
+    "grade": 0.0,            # what is sent to the trainer
+    "game_grade": 0.0,       # last gradient reported by the game (before the riding mode scales it)
+    "manual_grade": 0.0,     # the dashboard's slider
+    "mode": "game",          # where the trainer's gradient comes from: "game" | "manual"
+    "connected": False, "trainer_name": "-", "simulate": False, "ftp": 200,
+    "t_packet": 0.0, "t_udp": 0.0, "t_cp": 0.0, "raw_hex": "", "cp_last": "-",
+    "game_speed": 0.0, "pmax": 250, "keys": False, "keyset": "numpad",
+    "buttons": [], "raw": [], "t_buttons": 0.0,
+    "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
+    "difficulty": 0.4,       # share of the game's gradient the trainer is told
+    "preset": "easy",
+}
+
+# riding mode -> (power gain, share of the game's gradient sent to the trainer)
+PRESETS = {"easy": (2.0, 0.4), "medium": (1.4, 0.7), "real": (1.0, 1.0)}
+
+MAX_GRADE = 15.0             # the D500 simulates up to 15 %; most smart trainers do about the same
+
+history: collections.deque = collections.deque(maxlen=120)   # rider power, one sample a second
+log_lines: collections.deque = collections.deque(maxlen=80)
+stats = {"sum": 0.0, "n": 0, "max": 0}
+t_start = time.time()
+
+
+def log(msg: str) -> None:
+    line = f"{time.strftime('%H:%M:%S')}  {msg}"
+    log_lines.append(line)
+    print(line, flush=True)
+
+
+def apply_preset(name: str) -> None:
+    state["gain"], state["difficulty"] = PRESETS[name]
+    state["preset"] = name
+
+
+def clamp_grade(g: float) -> float:
+    return max(-MAX_GRADE, min(MAX_GRADE, g))
+
+
+def effective_grade() -> float:
+    """The gradient the trainer should simulate right now (also stored in ``state['grade']``)."""
+    g = state["manual_grade"] if state["mode"] == "manual" else state["game_grade"] * state["difficulty"]
+    g = clamp_grade(g)
+    state["grade"] = g
+    return g
+
+
+def throttle_for(power: float, floor: float = 15.0) -> float:
+    """0..1 'gas' for a rider power: coasting below ``floor`` watts, full at pmax / gain."""
+    if power < floor:
+        return 0.0
+    return min(1.0, power * state["gain"] / state["pmax"])
+
+
+def snapshot() -> dict:
+    """What the dashboard shows: the state plus ages, history and the log."""
+    now = time.time()
+    s = dict(state)
+    s["age_packet"] = round(now - s["t_packet"], 1) if s["t_packet"] else None
+    s["age_udp"] = round(now - s["t_udp"], 1) if s["t_udp"] else None
+    s["age_cp"] = round(now - s["t_cp"], 1) if s["t_cp"] else None
+    for k in ("t_packet", "t_udp", "t_cp"):
+        s.pop(k)
+    s["history"] = list(history)
+    s["log"] = list(log_lines)
+    s["avg_power"] = round(stats["sum"] / stats["n"]) if stats["n"] else 0
+    s["max_power"] = stats["max"]
+    s["elapsed"] = int(now - t_start)
+    s["distance"] = int(s["distance"])
+    return s

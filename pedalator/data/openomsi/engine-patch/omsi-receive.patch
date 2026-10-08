@@ -1,0 +1,89 @@
+diff --git a/crates/omsi-plugin/src/lua.rs b/crates/omsi-plugin/src/lua.rs
+index e3f8777..c2970d7 100644
+--- a/crates/omsi-plugin/src/lua.rs
++++ b/crates/omsi-plugin/src/lua.rs
+@@ -8,8 +8,8 @@
+ //!
+ //! Each plugin has its own Lua state with the safe libraries only: no `io`, no `os`
+ //! beyond the clock, no C modules and no `dofile`; `require` finds modules in the
+-//! plugin's own folder. The one way out to other programs is `omsi.send`: UDP datagrams
+-//! to this computer only. A call that runs longer than a second is stopped, and a plugin
++//! plugin's own folder. The one way to and from other programs is `omsi.send` and `omsi.receive`: UDP
++//! datagrams to and from this computer only. A call that runs longer than a second is stopped, and a plugin
+ //! whose handlers keep failing is switched off for the session.
+ 
+ use crate::PluginIo;
+@@ -337,6 +337,24 @@ impl LuaPlugin {
+             })?,
+         )?;
+ 
++        // omsi.receive(port): the UDP datagrams that arrived on 127.0.0.1:port since the last
++        // call (a list of strings, oldest first; empty when none), for a program on this
++        // computer that feeds the plugin (a trainer bridge, a telemetry tool)
++        let receiver = RefCell::new(Receiver::default());
++        omsi.set(
++            "receive",
++            lua.create_function(move |lua, port: i64| match receiver.borrow_mut().receive(port) {
++                Ok(list) => {
++                    let t = lua.create_table()?;
++                    for (i, m) in list.iter().enumerate() {
++                        t.set(i + 1, lua.create_string(m)?)?;
++                    }
++                    Ok((Some(t), None))
++                }
++                Err(why) => Ok((None, Some(why))),
++            })?,
++        )?;
++
+         // saved data, only the plugin's own file
+         let data_path = self.data_path.clone();
+         omsi.set("_read_data", lua.create_function(move |_, ()| Ok(std::fs::read_to_string(&data_path).ok()))?)?;
+@@ -475,6 +493,48 @@ impl Sender {
+     }
+ }
+ 
++/// A plugin's `omsi.receive`: one socket on `127.0.0.1:port`, opened on the first call.
++#[derive(Default)]
++struct Receiver {
++    socket: Option<(u16, UdpSocket)>,
++}
++
++/// Most datagrams one `omsi.receive` hands over (the rest are dropped, newest kept).
++const RECEIVE_MAX: usize = 64;
++
++impl Receiver {
++    fn receive(&mut self, port: i64) -> Result<Vec<Vec<u8>>, String> {
++        let port = u16::try_from(port).ok().filter(|p| *p >= 1024).ok_or("the port must be 1024-65535")?;
++        if MULTIPLAYER_PORTS.contains(&port) {
++            return Err(format!("ports {}-{} are the game's multiplayer", MULTIPLAYER_PORTS.start, MULTIPLAYER_PORTS.end - 1));
++        }
++        if self.socket.as_ref().is_some_and(|(p, _)| *p != port) {
++            return Err("a plugin listens on one port only".into());
++        }
++        if self.socket.is_none() {
++            let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, port)).map_err(|e| e.to_string())?;
++            socket.set_nonblocking(true).map_err(|e| e.to_string())?;
++            self.socket = Some((port, socket));
++        }
++        let socket = &self.socket.as_ref().expect("opened above").1;
++        let mut out: Vec<Vec<u8>> = Vec::new();
++        let mut buf = [0u8; SEND_MAX];
++        // (a datagram is read whole; at most a second's worth are looked at per call)
++        for _ in 0..1000 {
++            match socket.recv_from(&mut buf) {
++                Ok((n, _)) => {
++                    if out.len() == RECEIVE_MAX {
++                        out.remove(0);
++                    }
++                    out.push(buf[..n].to_vec());
++                }
++                Err(_) => break,
++            }
++        }
++        Ok(out)
++    }
++}
++
+ fn emit(lua: &Lua, event: &str, args: impl mlua::IntoLuaMulti) -> mlua::Result<()> {
+     let emit: Function = lua.globals().get::<Table>("omsi")?.get("emit")?;
+     let mut a = args.into_lua_multi(lua)?;

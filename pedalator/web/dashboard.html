@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedalator</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #131825; --panel2: #1a2133; --line: #263049;
+    --text: #e8edf7; --dim: #7d8aa6;
+    --z1: #5b6478; --z2: #3da5ff; --z3: #2ee27a; --z4: #ffd23d; --z5: #ff8a2b; --z6: #ff3d4f;
+    --ok: #2ee27a; --bad: #ff3d4f; --accent: #6c8cff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #17203a 0%, var(--bg) 60%) fixed;
+         color: var(--text); font: 15px/1.4 "Segoe UI", system-ui, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 18px 16px 40px; }
+  header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 16px; }
+  h1 { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; margin: 0; font-weight: 700; }
+  h1 span { color: var(--accent); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+  .pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+          background: var(--panel); border: 1px solid var(--line); font-size: 13px; color: var(--dim); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 8px var(--bad); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .dot.warn { background: var(--z4); box-shadow: 0 0 8px var(--z4); }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+  .card { background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 1px solid var(--line);
+          border-radius: 16px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .card h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+  .c-power { grid-column: span 7; } .c-side { grid-column: span 5; display: grid; gap: 14px; }
+  .c-grade { grid-column: span 4; } .c-chart { grid-column: span 8; }
+  .c-debug { grid-column: span 12; }
+  @media (max-width: 900px) { .c-power, .c-side, .c-grade, .c-chart { grid-column: span 12; } }
+
+  /* power gauge */
+  .gauge { width: 100%; max-width: 520px; display: block; margin: 0 auto; }
+  .big { font-size: 64px; font-weight: 800; font-variant-numeric: tabular-nums; fill: var(--text); }
+  .unit { font-size: 16px; fill: var(--dim); letter-spacing: .2em; }
+  .zone-name { font-size: 14px; font-weight: 700; letter-spacing: .12em; }
+  .ped { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 12px;
+         font-weight: 800; letter-spacing: .14em; background: #1b2236; color: var(--dim); border: 1px solid var(--line); }
+  .ped .led { width: 12px; height: 12px; border-radius: 50%; background: #3a4560; }
+  .ped.on { color: var(--ok); border-color: #1d6b41; background: #0f2a1d; }
+  .ped.on .led { background: var(--ok); box-shadow: 0 0 14px var(--ok); animation: pulse .7s infinite alternate; }
+  @keyframes pulse { to { transform: scale(1.35); opacity: .7; } }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* bars */
+  .bar { height: 26px; border-radius: 8px; background: #0e1424; border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .bar .zones { position: absolute; inset: 0; display: flex; opacity: .22; }
+  .bar .zones i { flex: 1; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 7px; transition: background .2s; }
+  .bar .peak { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; opacity: .85; box-shadow: 0 0 6px #fff; }
+  .bar .sweet { position: absolute; top: 0; bottom: 0; background: rgba(46,226,122,.13); border-left: 1px dashed #2ee27a88; border-right: 1px dashed #2ee27a88; }
+  .metric { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .metric b { font-size: 34px; font-variant-numeric: tabular-nums; font-weight: 800; }
+  .metric small { color: var(--dim); font-size: 13px; margin-left: 4px; letter-spacing: .1em; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .stat { background: #0e1424; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .stat span { display: block; font-size: 11px; color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+  .stat b { font-size: 20px; font-variant-numeric: tabular-nums; }
+
+  /* grade */
+  .grade-body { display: flex; gap: 18px; align-items: stretch; }
+  .gmeter { width: 54px; height: 200px; border-radius: 12px; background: #0e1424; border: 1px solid var(--line); position: relative; overflow: hidden; flex: none; }
+  .gmeter .mid { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: #3a4560; }
+  .gmeter .gfill { position: absolute; left: 6px; right: 6px; border-radius: 6px; transition: background .2s; }
+  .gnum { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .seg { display: inline-flex; background: #0e1424; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button { background: none; border: 0; color: var(--dim); padding: 7px 14px; font-weight: 700; cursor: pointer; font: inherit; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  canvas { width: 100%; height: 190px; display: block; }
+
+  /* debug */
+  details { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+  summary { cursor: pointer; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; font-size: 12px; }
+  pre { background: #0a0e18; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 8px 0 0;
+        font: 12.5px/1.5 Consolas, monospace; color: #b9c6e4; max-height: 220px; overflow: auto; white-space: pre-wrap; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+  .kv div { background: #0e1424; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .kv span { display: block; font-size: 11px; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; }
+  .kv b { font-weight: 600; word-break: break-all; }
+  #offline { display: none; position: fixed; inset: 0; background: #0b0e14e8; z-index: 9; align-items: center; justify-content: center;
+             text-align: center; font-size: 20px; }
+  #offline.show { display: flex; }
+  #offline small { display: block; color: var(--dim); font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div id="offline"><div>Lost connection to Pedalator<small>Start <code>python -m pedalator</code> – the dashboard reconnects by itself.</small></div></div>
+<div class="wrap">
+  <header>
+    <h1>Pedal<span>ator</span></h1>
+    <div class="pills">
+      <div class="pill"><i class="dot" id="d-ble"></i><span id="t-ble">trainer: …</span></div>
+      <div class="pill"><i class="dot" id="d-game"></i><span id="t-game">game: …</span></div>
+      <div class="pill"><i class="dot" id="d-pkt"></i><span id="t-pkt">data: …</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card c-power">
+      <h2>Power</h2>
+      <svg class="gauge" viewBox="-6 2 252 152" id="gauge">
+        <g id="gzones"></g>
+        <path id="gprog" fill="none" stroke-width="14" stroke-linecap="round"/>
+        <g id="gticks"></g>
+        <text class="big" x="120" y="112" text-anchor="middle" id="gnum">0</text>
+        <text class="unit" x="120" y="132" text-anchor="middle">WATT</text>
+        <text class="zone-name" x="120" y="148" text-anchor="middle" id="gzone"></text>
+      </svg>
+      <div class="row" style="margin-top:6px">
+        <div class="ped" id="ped"><i class="led"></i><span id="pedtxt">IDLE</span></div>
+        <div style="color:var(--dim);font-size:13px">FTP <input id="ftp" type="number" min="50" max="600" step="10" style="width:70px;background:#0e1424;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:4px 6px"> W</div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="bar" id="pbar"><div class="zones" id="pzones"></div><div class="fill" id="pfill"></div><div class="peak" id="ppeak"></div></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Average</span><b id="s-avg">0</b></div>
+        <div class="stat"><span>Max</span><b id="s-max">0</b></div>
+        <div class="stat"><span>Distance</span><b id="s-dist">0.00</b></div>
+        <div class="stat"><span>Time</span><b id="s-time">00:00</b></div>
+      </div>
+    </section>
+
+    <div class="c-side">
+      <section class="card">
+        <h2>Cadence</h2>
+        <div class="metric"><b id="cad">0</b><small>RPM</small></div>
+        <div class="bar"><div class="sweet" style="left:66.7%;width:16.7%"></div><div class="fill" id="cfill"></div></div>
+        <div style="color:var(--dim);font-size:12px;margin-top:6px">green range: 80–100 rpm</div>
+      </section>
+      <section class="card">
+        <h2>Speed</h2>
+        <div class="metric"><b id="spd">0.0</b><small>KM/H</small></div>
+        <div class="bar"><div class="fill" id="sfill" style="background:linear-gradient(90deg,#3da5ff,#6c8cff)"></div></div>
+        <div class="metric" style="margin-top:12px"><span style="color:var(--dim)">Heart rate</span><b style="font-size:22px" id="hr">–</b></div>
+      </section>
+    </div>
+
+    <section class="card c-grade">
+      <h2>Grade / resistance</h2>
+      <div class="grade-body">
+        <div class="gmeter"><div class="mid"></div><div class="gfill" id="gfill"></div></div>
+        <div style="flex:1">
+          <div class="gnum" id="gnumv">0.0%</div>
+          <div style="color:var(--dim);font-size:13px" id="gsrc">source: game</div>
+          <div style="margin:12px 0 8px"><div class="seg"><button id="m-game" class="on">Game</button><button id="m-man">Manual</button></div></div>
+          <input id="gslider" type="range" min="-15" max="15" step="0.5" value="0">
+          <div style="color:var(--dim);font-size:12px">“Manual” sets the trainer's resistance regardless of the game (a good test: 0 → 8 %).</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="card c-chart">
+      <h2>Power – last 2 minutes</h2>
+      <canvas id="chart" width="900" height="190"></canvas>
+    </section>
+
+    <section class="card c-mode" style="grid-column:span 12">
+      <h2>Riding mode</h2>
+      <div class="row">
+        <div class="seg" id="presets"><button data-p="easy">Easy</button><button data-p="medium">Medium</button><button data-p="real">Realistic</button></div>
+        <div style="color:var(--dim);font-size:13px" id="modeinfo"></div>
+      </div>
+      <div class="kv" style="margin-top:12px">
+        <div><span>Power gain: <b id="gv">x2.0</b> (how much game throttle each of your watts gives)</span><input id="gainr" type="range" min="0.5" max="4" step="0.1"></div>
+        <div><span>Trainer grade: <b id="dv">40%</b> (how much of the game's hills you feel)</span><input id="diffr" type="range" min="0" max="1" step="0.05"></div>
+      </div>
+    </section>
+
+    <section class="card c-debug">
+      <h2>Debug</h2>
+      <div class="kv">
+        <div><span>Trainer</span><b id="k-name">-</b></div>
+        <div><span>Last FTMS packet</span><b id="k-age">-</b></div>
+        <div><span>Last gradient from the game</span><b id="k-udp">-</b></div>
+        <div><span>Control Point response</span><b id="k-cp">-</b></div>
+        <div><span>Resistance level (trainer)</span><b id="k-res">-</b></div>
+        <div><span>Game speed</span><b id="k-gs">-</b></div>
+        <div><span>Game keys (--keys)</span><b id="k-keys">-</b></div>
+      </div>
+      <details open><summary>Raw Indoor Bike Data packet (hex)</summary><pre id="raw">-</pre></details>
+      <details open><summary>Event log</summary><pre id="log">-</pre></details>
+    </section>
+  </div>
+</div>
+
+<script>
+// ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
+const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
+const PL = {
+  'Lost connection to Pedalator': 'Brak połączenia z Pedalatorem',
+  'Start': 'Uruchom',
+  '– the dashboard reconnects by itself.': '– panel połączy się sam.',
+  'trainer: …': 'trenażer: …',
+  'game: …': 'gra: …',
+  'data: …': 'dane: …',
+  'Power': 'Moc',
+  'IDLE': 'STOI',
+  'PEDALLING': 'PEDAŁUJESZ',
+  'Average': 'Średnia',
+  'Distance': 'Dystans',
+  'Time': 'Czas',
+  'Cadence': 'Kadencja',
+  'green range: 80–100 rpm': 'zielony zakres: 80–100 rpm',
+  'Speed': 'Prędkość',
+  'Heart rate': 'Tętno',
+  'Grade / resistance': 'Nachylenie / opór',
+  'source: game': 'źródło: gra (UDP)',
+  'source: manual (slider)': 'źródło: ręcznie (suwak)',
+  'Game': 'Gra',
+  'Manual': 'Ręcznie',
+  '“Manual” sets the trainer\'s resistance regardless of the game (a good test: 0 → 8 %).': '„Ręcznie” ustawia opór trenażera niezależnie od gry (dobry test: 0 → 8 %).',
+  'Riding mode': 'Tryb jazdy',
+  'Easy': 'Łatwy',
+  'Medium': 'Średni',
+  'Realistic': 'Realistyczny',
+  'Power gain:': 'Wzmocnienie mocy:',
+  '(how much game throttle each of your watts gives)': '(ile gazu w grze daje Twój wat)',
+  'Trainer grade:': 'Nachylenie dla trenażera:',
+  '(how much of the game\'s hills you feel)': '(ile oporu z górek czujesz)',
+  'Power – last 2 minutes': 'Moc – ostatnie 2 minuty',
+  'Trainer': 'Trenażer',
+  'Last FTMS packet': 'Ostatni pakiet FTMS',
+  'Last gradient from the game': 'Ostatnie nachylenie z gry',
+  'Control Point response': 'Odpowiedź Control Point',
+  'Resistance level (trainer)': 'Poziom oporu (trenażer)',
+  'Game speed': 'Prędkość w grze',
+  'Game keys (--keys)': 'Klawisze do gry (--keys)',
+  'Raw Indoor Bike Data packet (hex)': 'Surowy pakiet Indoor Bike Data (hex)',
+  'Event log': 'Dziennik zdarzeń',
+  'Z1 RECOVERY': 'Z1 REGENERACJA',
+  'Z2 ENDURANCE': 'Z2 WYTRZYMAŁOŚĆ',
+  'Z3 TEMPO': 'Z3 TEMPO',
+  'Z4 THRESHOLD': 'Z4 PRÓG',
+  'Z5 VO2': 'Z5 VO2',
+  'Z6 ANAEROBIC': 'Z6 ANAEROB',
+  'trainer: {0}': 'trenażer: {0}',
+  'trainer: none': 'trenażer: brak',
+  'game: connected': 'gra: łączność OK',
+  'game: silent {0} s': 'gra: cisza {0} s',
+  'game: no signal': 'gra: brak sygnału',
+  'data: flowing': 'dane: płyną',
+  'data: stalled {0} s': 'dane: stoją {0} s',
+  'data: none': 'dane: brak',
+  'none': 'brak',
+  '{0} s ago': '{0} s temu',
+  'nothing received': 'nic nie przyszło',
+  'off': 'wyłączone',
+  'full throttle from about {0} W': 'pełny gaz od ok. {0} W'
+};
+const t = (s, ...a) => { let r = (LANG === 'pl' && PL[s]) || s; a.forEach((v, i) => { r = r.split('{' + i + '}').join(v); }); return r; };
+function translateDom() {
+  if (LANG !== 'pl') return;
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) { const k = n.nodeValue.trim(); if (k && PL[k]) n.nodeValue = n.nodeValue.replace(k, PL[k]); }
+  document.documentElement.lang = 'pl';
+}
+const $ = id => document.getElementById(id);
+const ZC = ['#5b6478', '#3da5ff', '#2ee27a', '#ffd23d', '#ff8a2b', '#ff3d4f'];
+const ZN = ['Z1 RECOVERY', 'Z2 ENDURANCE', 'Z3 TEMPO', 'Z4 THRESHOLD', 'Z5 VO2', 'Z6 ANAEROBIC'];
+const ZB = [0.55, 0.75, 0.90, 1.05, 1.20];           // zone limits, fraction of FTP
+const zoneOf = (w, ftp) => { const f = w / ftp; let z = 0; while (z < 5 && f >= ZB[z]) z++; return z; };
+
+let S = null, shown = { p: 0, cad: 0, spd: 0, grade: 0 }, peak = 0, peakAt = 0, gaugeFtp = 0, lastMsg = 0;
+
+// ---- gauge geometry (semi circle, 180 -> 360 deg) ----
+const CX = 120, CY = 118, R = 92;
+function pt(a, r = R) { const t = Math.PI * (1 + a); return [CX + r * Math.cos(t), CY + r * Math.sin(t)]; }
+function arc(a0, a1, r = R) {
+  const [x0, y0] = pt(a0, r), [x1, y1] = pt(a1, r);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+function buildGauge(ftp) {
+  gaugeFtp = ftp;
+  const max = gaugeMax(ftp);
+  let h = '', lo = 0;
+  for (let z = 0; z < 6; z++) {
+    const hi = z < 5 ? Math.min(ZB[z] * ftp, max) : max;
+    if (hi > lo) h += `<path d="${arc(lo / max, hi / max)}" fill="none" stroke="${ZC[z]}" stroke-width="14" opacity=".23"/>`;
+    lo = hi;
+  }
+  $('gzones').innerHTML = h;
+  let t = '';
+  const step = max > 400 ? 100 : 50;
+  for (let w = 0; w <= max; w += step) {
+    const [x0, y0] = pt(w / max, R + 9), [x1, y1] = pt(w / max, R + 14), [x2, y2] = pt(w / max, R + 21);
+    t += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#4a5778" stroke-width="1.5"/>` +
+         `<text x="${x2}" y="${y2 + 3}" font-size="8" fill="#7d8aa6" text-anchor="middle">${w}</text>`;
+  }
+  $('gticks').innerHTML = t;
+  // power bar zones
+  $('pzones').innerHTML = ZC.map((c, z) => {
+    const lo = z ? ZB[z - 1] * ftp : 0, hi = z < 5 ? ZB[z] * ftp : max;
+    return `<i style="flex:${Math.max(0, Math.min(hi, max) - Math.min(lo, max))};background:${c}"></i>`;
+  }).join('');
+}
+const gaugeMax = ftp => Math.ceil(ftp * 1.7 / 50) * 50;
+
+// ---- chart ----
+function drawChart(hist, ftp) {
+  const c = $('chart'), g = c.getContext('2d'), dpr = devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const max = Math.max(gaugeMax(ftp), ...hist, 100), padL = 34, padB = 4;
+  const X = i => padL + (w - padL) * i / 119, Y = v => h - padB - (h - padB - 8) * v / max;
+  g.font = '10px Segoe UI'; g.fillStyle = '#7d8aa6'; g.strokeStyle = '#263049'; g.lineWidth = 1;
+  for (let v = 0; v <= max; v += 100) { g.beginPath(); g.moveTo(padL, Y(v)); g.lineTo(w, Y(v)); g.stroke(); g.fillText(v, 2, Y(v) + 3); }
+  g.strokeStyle = '#2ee27a55'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(padL, Y(ftp)); g.lineTo(w, Y(ftp)); g.stroke(); g.setLineDash([]);
+  if (hist.length < 2) return;
+  const off = 120 - hist.length;
+  for (let i = 1; i < hist.length; i++) {            // line coloured by zone
+    g.strokeStyle = ZC[zoneOf(hist[i], ftp)]; g.lineWidth = 2.5; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(X(i - 1 + off), Y(hist[i - 1])); g.lineTo(X(i + off), Y(hist[i])); g.stroke();
+  }
+  const grad = g.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, '#6c8cff44'); grad.addColorStop(1, '#6c8cff00');
+  g.fillStyle = grad; g.beginPath(); g.moveTo(X(off), Y(0));
+  hist.forEach((v, i) => g.lineTo(X(i + off), Y(v))); g.lineTo(X(119), Y(0)); g.fill();
+}
+
+// ---- render (60 fps, eased towards the latest values) ----
+const ease = (a, b, k) => a + (b - a) * k;
+function frame() {
+  requestAnimationFrame(frame);
+  if (!S) return;
+  const ftp = S.ftp;
+  if (ftp !== gaugeFtp) buildGauge(ftp);
+  const max = gaugeMax(ftp);
+  shown.p = ease(shown.p, S.power, .18); shown.cad = ease(shown.cad, S.cadence, .18);
+  shown.spd = ease(shown.spd, S.speed, .18); shown.grade = ease(shown.grade, S.grade, .2);
+  const p = Math.max(0, shown.p), z = zoneOf(p, ftp), col = ZC[z];
+  $('gprog').setAttribute('d', p > 1 ? arc(0, Math.min(p, max) / max) : '');
+  $('gprog').setAttribute('stroke', col);
+  $('gprog').style.filter = `drop-shadow(0 0 6px ${col})`;
+  $('gnum').textContent = Math.round(p);
+  $('gzone').textContent = S.power > 10 ? t(ZN[z]) : '';
+  $('gzone').setAttribute('fill', col);
+  const pct = Math.min(100, p / max * 100);
+  $('pfill').style.width = pct + '%'; $('pfill').style.background = col; $('pfill').style.boxShadow = `0 0 12px ${col}`;
+  const now = performance.now();
+  if (p >= peak || now - peakAt > 2500) { peak = p; peakAt = now; }
+  $('ppeak').style.left = `calc(${Math.min(100, peak / max * 100)}% - 2px)`;
+
+  const pedaling = S.power > 10 || S.cadence > 0;
+  $('ped').classList.toggle('on', pedaling); $('pedtxt').textContent = pedaling ? t('PEDALLING') : t('IDLE');
+
+  $('cad').textContent = Math.round(shown.cad);
+  const cpct = Math.min(100, shown.cad / 120 * 100), good = shown.cad >= 80 && shown.cad <= 100;
+  $('cfill').style.width = cpct + '%';
+  $('cfill').style.background = good ? '#2ee27a' : (shown.cad > 100 ? '#ff8a2b' : (shown.cad > 5 ? '#3da5ff' : '#3a4560'));
+  $('spd').textContent = shown.spd.toFixed(1);
+  $('sfill').style.width = Math.min(100, shown.spd / 60 * 100) + '%';
+  $('hr').textContent = S.hr ? S.hr + ' bpm' : '–';
+
+  const g = shown.grade, gc = g > 0.3 ? '#ff5a3d' : (g < -0.3 ? '#2ee27a' : '#7d8aa6');
+  $('gnumv').textContent = (g > 0 ? '+' : '') + g.toFixed(1) + '%'; $('gnumv').style.color = gc;
+  const half = 50 * Math.min(1, Math.abs(g) / 15);
+  const f = $('gfill'); f.style.background = gc;
+  if (g >= 0) { f.style.top = (50 - half) + '%'; f.style.height = half + '%'; } else { f.style.top = '50%'; f.style.height = half + '%'; }
+}
+
+function onState() {
+  const s = S, ok = s.connected;
+  $('d-ble').className = 'dot' + (ok ? ' on' : ''); $('t-ble').textContent = ok ? t('trainer: {0}', s.trainer_name) : t('trainer: none');
+  const gameOn = s.age_udp !== null && s.age_udp < 3;
+  $('d-game').className = 'dot' + (gameOn ? ' on' : (s.age_udp !== null ? ' warn' : ''));
+  $('t-game').textContent = gameOn ? t('game: connected') : (s.age_udp !== null ? t('game: silent {0} s', s.age_udp.toFixed(0)) : t('game: no signal'));
+  const fresh = s.age_packet !== null && s.age_packet < 2;
+  $('d-pkt').className = 'dot' + (fresh ? ' on' : (s.age_packet !== null ? ' warn' : ''));
+  $('t-pkt').textContent = fresh ? t('data: flowing') : (s.age_packet !== null ? t('data: stalled {0} s', s.age_packet.toFixed(0)) : t('data: none'));
+  $('s-avg').textContent = s.avg_power; $('s-max').textContent = s.max_power;
+  $('s-dist').textContent = (s.distance / 1000).toFixed(2) + ' km';
+  const e = s.elapsed; $('s-time').textContent = String(Math.floor(e / 60)).padStart(2, '0') + ':' + String(e % 60).padStart(2, '0');
+  $('m-game').classList.toggle('on', s.mode === 'game'); $('m-man').classList.toggle('on', s.mode === 'manual');
+  $('gsrc').textContent = s.mode === 'game' ? t('source: game') : t('source: manual (slider)');
+  if (document.activeElement !== $('ftp')) $('ftp').value = s.ftp;
+  if (document.activeElement !== $('gslider')) $('gslider').value = s.manual_grade;
+  $('k-name').textContent = s.trainer_name; $('k-age').textContent = s.age_packet === null ? t('none') : t('{0} s ago', s.age_packet.toFixed(1));
+  $('k-udp').textContent = s.age_udp === null ? t('nothing received') : t('{0} s ago', s.age_udp.toFixed(1));
+  $('k-cp').textContent = s.cp_last + (s.age_cp !== null ? ` (${t('{0} s ago', s.age_cp.toFixed(0))})` : '');
+  $('k-res').textContent = s.resistance === null ? '-' : s.resistance;
+  $('k-gs').textContent = s.game_speed.toFixed(1) + ' km/h'; $('k-keys').textContent = s.keys ? `${s.keyset} (pmax ${s.pmax} W)` : t('off');
+  $('raw').textContent = s.raw_hex || '-';
+  const lg = $('log'), atEnd = lg.scrollTop + lg.clientHeight >= lg.scrollHeight - 8;
+  lg.textContent = s.log.join('\n') || '-'; if (atEnd) lg.scrollTop = lg.scrollHeight;
+  showMode(s);
+  drawChart(s.history, s.ftp);
+}
+
+// ---- riding mode ----
+document.querySelectorAll('#presets button').forEach(b => b.onclick = () => post('/preset', { name: b.dataset.p }));
+$('gainr').oninput = e => post('/gain', { gain: +e.target.value });
+$('diffr').oninput = e => post('/difficulty', { difficulty: +e.target.value });
+function showMode(s) {
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', b.dataset.p === s.preset));
+  $('gv').textContent = 'x' + s.gain.toFixed(1); $('dv').textContent = Math.round(s.difficulty * 100) + '%';
+  if (document.activeElement !== $('gainr')) $('gainr').value = s.gain;
+  if (document.activeElement !== $('diffr')) $('diffr').value = s.difficulty;
+  $('modeinfo').textContent = t('full throttle from about {0} W', Math.round(s.pmax / s.gain));
+}
+// ---- controls ----
+const post = (u, b) => fetch(u, { method: 'POST', body: JSON.stringify(b) }).catch(() => {});
+$('m-game').onclick = () => post('/mode', { mode: 'game' });
+$('m-man').onclick = () => post('/mode', { mode: 'manual' });
+$('gslider').oninput = e => { post('/mode', { mode: 'manual' }); post('/grade', { grade: +e.target.value }); };
+$('ftp').onchange = e => post('/ftp', { ftp: +e.target.value });
+
+// ---- stream ----
+function connect() {
+  const es = new EventSource('/events');
+  es.onmessage = m => { S = JSON.parse(m.data); lastMsg = performance.now(); $('offline').classList.remove('show'); onState(); };
+  es.onerror = () => { es.close(); $('offline').classList.add('show'); setTimeout(connect, 1500); };
+}
+setInterval(() => { if (lastMsg && performance.now() - lastMsg > 3000) $('offline').classList.add('show'); }, 1000);
+translateDom();
+connect(); frame();
+</script>
+</body>
+</html>

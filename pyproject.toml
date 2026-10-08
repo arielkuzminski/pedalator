@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pedalator"
+version = "0.1.0"
+description = "Ride games with your smart trainer: turns pedalling into game input and the game's hills into trainer resistance."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ariel Kuźmiński" }]
+keywords = ["smart trainer", "FTMS", "Bluetooth", "cycling", "OpenMW", "Morrowind", "OMSI", "Zwift Click", "game controller"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Topic :: Games/Entertainment",
+]
+dependencies = [
+  "bleak>=0.21",          # Bluetooth LE (direct connection from the PC)
+  "cryptography>=42",     # the private CA and certificate for phone mode (HTTPS)
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+demo = ["pillow>=10"]       # tools/make_demo.py
+
+[project.scripts]
+pedalator = "pedalator.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/arielkuzminski/pedalator"
+Issues = "https://github.com/arielkuzminski/pedalator/issues"
+
+[tool.setuptools.packages.find]
+include = ["pedalator*"]
+
+[tool.setuptools.package-data]
+pedalator = ["web/*.html", "web/*.js", "data/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "B008"]

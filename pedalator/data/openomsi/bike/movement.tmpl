@@ -1,0 +1,26 @@
+'	################ Bewegung: rider power -> wheel torque
+	(L.L.Velocity) 3.6 / (S.L.v_real)
+	(L.L.v_real) (C.L.v_floor) max (S.L.v_ms)
+
+	' Trainer_Power > 0: watts from the trainer bridge; else the throttle key = pmax watts
+	(L.L.Trainer_Power) 1 >
+		{if}
+			(L.L.Trainer_Power) (S.L.P_rider)
+		{else}
+			(L.L.Throttle) (C.L.pmax) * (S.L.P_rider)
+		{endif}
+
+	(L.L.P_rider) (L.L.v_ms) / (C.L.wheel_r) * (C.L.k_mass) * (C.L.M_max) min (S.L.M_Wheel)
+
+	(L.L.Velocity) (C.L.v_limit) >
+		{if}
+			0 (S.L.M_Wheel)
+		{endif}
+
+	' all forces x k_mass: the engine floors the mass at 500 kg, a real rider+bike is ~90 kg.
+	' brake lever + air drag (0.5 * rho * CdA * v^2) + rolling resistance
+	(L.L.Brake) (C.L.brake_force) * (L.L.v_real) (L.L.v_real) * (C.L.drag) * + (C.L.k_mass) * (S.L.Brakeforce)
+	(L.L.v_real) 0.3 >
+		{if}
+			(L.L.Brakeforce) (C.L.roll_real) (C.L.k_mass) * + (S.L.Brakeforce)
+		{endif}

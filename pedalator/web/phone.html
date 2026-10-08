@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trainer Phone</title>
+<style>
+  :root { --bg:#0b0e14; --panel:#151b2b; --line:#263049; --text:#e8edf7; --dim:#7d8aa6; --ok:#2ee27a; --bad:#ff3d4f; --warn:#ffd23d; --accent:#6c8cff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:17px/1.4 -apple-system, "Segoe UI", sans-serif;
+         padding: max(16px, env(safe-area-inset-top)) 16px 24px; -webkit-user-select:none; user-select:none; }
+  h1 { font-size:15px; letter-spacing:.14em; text-transform:uppercase; margin:0 0 14px; }
+  h1 span { color:var(--accent); }
+  .pills { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .pill { display:flex; align-items:center; gap:8px; padding:7px 13px; border-radius:999px; background:var(--panel); border:1px solid var(--line); font-size:14px; color:var(--dim); }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--bad); }
+  .dot.on { background:var(--ok); box-shadow:0 0 8px var(--ok); } .dot.warn { background:var(--warn); }
+  button.main { width:100%; padding:22px; border:0; border-radius:16px; background:var(--accent); color:#fff; font:700 22px inherit; font-family:inherit; }
+  button.main:disabled { background:#2a3350; color:var(--dim); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .cell { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px 16px; }
+  .cell.wide { grid-column:span 2; }
+  .cell span { display:block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+  .cell b { font-size:56px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.1; }
+  .cell.wide b { font-size:92px; }
+  .cell small { font-size:15px; color:var(--dim); margin-left:4px; }
+  #msg { margin-top:14px; padding:12px 14px; border-radius:12px; background:#1b1424; border:1px solid #5b2a45; color:#ffb3c1; display:none; }
+  #msg.show { display:block; }
+  pre { margin:14px 0 0; padding:10px 12px; background:#0a0e18; border:1px solid var(--line); border-radius:10px; font:12px/1.5 Menlo, monospace;
+        color:#b9c6e4; max-height:200px; overflow:auto; white-space:pre-wrap; -webkit-user-select:text; user-select:text; }
+  .hint { color:var(--dim); font-size:14px; margin-top:10px; }
+</style>
+</head>
+<body>
+<h1>Pedal<span>ator</span></h1>
+<div class="pills">
+  <div class="pill"><i class="dot" id="d-ble"></i><span id="t-ble">trainer: none</span></div>
+  <div class="pill"><i class="dot" id="d-pc"></i><span id="t-pc">PC: …</span></div>
+  <div class="pill"><i class="dot" id="d-click"></i><span id="t-click">controls: none</span></div>
+</div>
+<button class="main" id="go">Connect trainer</button>
+<button class="main" id="goclick" style="margin-top:10px;background:#2a3350;font-size:18px;padding:16px">Connect Zwift Click controls</button>
+<div class="hint" style="margin-top:6px">List empty? <a href="#" id="showall" style="color:#6c8cff">Show all Bluetooth devices</a></div>
+<div id="msg"></div>
+<div class="grid">
+  <div class="cell wide"><span>Power</span><b id="pw">0</b><small>W</small></div>
+  <div class="cell"><span>Cadence</span><b id="cd">0</b><small>rpm</small></div>
+  <div class="cell"><span>Grade</span><b id="gr">0.0</b><small>%</small></div>
+</div>
+<div class="cell wide" style="margin-top:12px"><span>Controls</span><b id="btns" style="font-size:28px">-</b></div>
+<div class="hint">Keep this screen on and the browser in front while you ride. Close Zwift Companion and any other app connected to the trainer.</div>
+<pre id="log">-</pre>
+
+<script>
+// ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
+const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
+const PL = {
+  'trainer: none': 'trenażer: brak',
+  'PC: …': 'komputer: …',
+  'controls: none': 'kontrolki: brak',
+  'Connect trainer': 'Połącz z trenażerem',
+  'Connect Zwift Click controls': 'Połącz kontrolki Zwift Click',
+  'List empty?': 'Lista pusta?',
+  'Show all Bluetooth devices': 'Pokaż wszystkie urządzenia Bluetooth',
+  'Power': 'Moc',
+  'Cadence': 'Kadencja',
+  'Grade': 'Nachylenie',
+  'Controls': 'Kontrolki',
+  'Keep this screen on and the browser in front while you ride. Close Zwift Companion and any other app connected to the trainer.': 'Zostaw ten ekran włączony i przeglądarkę na wierzchu, gdy jeździsz. Zamknij Zwift Companion i inne aplikacje połączone z trenażerem.',
+  'PC answered {0} to {1}': 'PC odpowiedział {0} na {1}',
+  'request to the PC failed ({0}): {1} [{2} in a row, online={3}]': 'żądanie do PC nie przeszło ({0}): {1} [{2} pod rząd, online={3}]',
+  'probe GET /phone/ping -> {0} in {1} ms': 'sonda GET /phone/ping -> {0} w {1} ms',
+  'probe GET /phone/ping failed too: {0}': 'sonda GET /phone/ping też nie przeszła: {0}',
+  'PC: OK': 'komputer: OK',
+  'PC: no connection': 'komputer: brak połączenia',
+  'writing to the trainer failed: {0}': 'zapis do trenażera nie powiódł się: {0}',
+  'This browser has no Web Bluetooth, or the page is not on HTTPS. On an iPhone open this address in the Bluefy app (not Safari), after installing and trusting the certificate.': 'Ta przeglądarka nie ma Web Bluetooth albo strona nie jest przez HTTPS. Na iPhonie otwórz ten adres w aplikacji Bluefy (nie w Safari), po zainstalowaniu i zaufaniu certyfikatu.',
+  'Connecting…': 'Łączę…',
+  'connecting to {0}': 'łączę z {0}',
+  'the trainer': 'trenażerem',
+  'trainer: {0}': 'trenażer: {0}',
+  'Connected': 'Połączono',
+  'connected, waiting for you to pedal': 'połączono, czekam na pedałowanie',
+  'the screen may turn off (no Wake Lock)': 'ekran może zgasnąć (brak Wake Lock)',
+  'error: {0}': 'błąd: {0}',
+  'No trainer chosen. Press the button and pick it (close Zwift Companion first).': 'Nie wybrano trenażera. Naciśnij przycisk i wybierz go (najpierw zamknij Zwift Companion).',
+  'Could not connect: {0}': 'Nie udało się połączyć: {0}',
+  'Try again': 'Spróbuj ponownie',
+  'trainer: disconnected': 'trenażer: rozłączony',
+  'trainer disconnected, retrying in 3 s': 'trenażer rozłączony, próbuję ponownie za 3 s',
+  'No Web Bluetooth (on an iPhone open this page in Bluefy).': 'Brak Web Bluetooth (na iPhonie otwórz tę stronę w Bluefy).',
+  'Click: connecting to {0}': 'Click: łączę z {0}',
+  'the controller': 'kontrolką',
+  'no Zwift service (the controller is locked, or it is not a Zwift Click)': 'brak usługi Zwift (kontrolka zablokowana albo to nie Zwift Click)',
+  'controls: {0}': 'kontrolki: {0}',
+  'Controls connected': 'Kontrolki połączone',
+  'Click connected ({0})': 'Click połączony ({0})',
+  'Click error: {0}': 'Click błąd: {0}',
+  'No controller chosen (or the list was empty). Wake the Click with a button press, close Zwift Companion, or use "Show all Bluetooth devices".': 'Nie wybrano kontrolki (lub lista była pusta). Obudź Click przyciskiem, zamknij Zwift Companion albo użyj „Pokaż wszystkie urządzenia Bluetooth".',
+  'Controls: {0}': 'Kontrolki: {0}',
+  'Try again (Zwift Click)': 'Spróbuj ponownie (Zwift Click)',
+  'controls: disconnected': 'kontrolki: rozłączone',
+  'Click disconnected': 'Click rozłączony',
+  'the gradient stream from the PC was interrupted, reconnecting': 'strumień nachylenia z PC przerwany, łączę ponownie',
+  'No Web Bluetooth in this browser. On an iPhone open this address in the Bluefy app (after installing the certificate).': 'Brak Web Bluetooth w tej przeglądarce. Na iPhonie otwórz ten adres w aplikacji Bluefy (po zainstalowaniu certyfikatu).'
+};
+const t = (s, ...a) => { let r = (LANG === 'pl' && PL[s]) || s; a.forEach((v, i) => { r = r.split('{' + i + '}').join(v); }); return r; };
+function translateDom() {
+  if (LANG !== 'pl') return;
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) { const k = n.nodeValue.trim(); if (k && PL[k]) n.nodeValue = n.nodeValue.replace(k, PL[k]); }
+  document.documentElement.lang = 'pl';
+}
+const $ = id => document.getElementById(id);
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const q = p => p + '?t=' + encodeURIComponent(TOKEN);
+const FTMS = 0x1826, BIKE = 0x2AD2, CTRL = 0x2AD9;
+let dev = null, cp = null, grade = 0, sentGrade = null, lastSend = 0, writing = Promise.resolve(), wake = null, pcOk = false, wantConn = false;
+const logLines = [];
+
+function log(m) {
+  logLines.push(new Date().toLocaleTimeString() + '  ' + m); if (logLines.length > 40) logLines.shift();
+  $('log').textContent = logLines.join('\n'); $('log').scrollTop = 1e9;
+  post('/phone/status', { kind: 'log', msg: m });
+}
+function showMsg(t) { $('msg').textContent = t; $('msg').classList.toggle('show', !!t); }
+let postFails = 0, lastFailLog = 0, lastOk = 0;
+function localLog(m) {                    // only on this screen: used for errors of the link to the PC itself
+  logLines.push(new Date().toLocaleTimeString() + '  ' + m); if (logLines.length > 40) logLines.shift();
+  $('log').textContent = logLines.join('\n'); $('log').scrollTop = 1e9;
+}
+// Every request has a deadline and none is left hanging (Chrome refuses new "keepalive" requests while old ones pile up).
+// Trainer packets are coalesced: while one is on its way only the newest waits.
+let dataBusy = false, dataNext = null;
+function rawPost(path, body, ms) {
+  const ac = new AbortController(), timer = setTimeout(() => ac.abort(), ms || 4000);
+  return fetch(q(path), { method: 'POST', body: JSON.stringify(body), signal: ac.signal, cache: 'no-store' })
+    .finally(() => clearTimeout(timer));
+}
+function noteOk(r, path) { postFails = 0; lastOk = Date.now(); setPc(r.ok); if (!r.ok) localLog(t('PC answered {0} to {1}', r.status, path)); return r; }
+function noteFail(e, path) {
+  postFails++;
+  if (Date.now() - lastFailLog > 2000) {
+    lastFailLog = Date.now();
+    localLog(t('request to the PC failed ({0}): {1} [{2} in a row, online={3}]', path, e.name + ': ' + e.message, postFails, navigator.onLine));
+  }
+  if (postFails === 10 || postFails % 50 === 0) probe();   // is the PC reachable at all? (answer goes to the screen log)
+  if (postFails >= 3) setPc(false);
+}
+function post(path, body) {
+  if (path === '/phone/data') {
+    if (dataBusy) { dataNext = body; return Promise.resolve(); }
+    dataBusy = true;
+    const go = b => rawPost(path, b).then(r => noteOk(r, path)).catch(e => noteFail(e, path)).finally(() => {
+      if (dataNext) { const n = dataNext; dataNext = null; go(n); } else dataBusy = false;
+    });
+    return go(body);
+  }
+  return rawPost(path, body).then(r => noteOk(r, path)).catch(e => noteFail(e, path));
+}
+// when requests keep failing: a plain GET shows whether the PC is reachable at all, and says what the browser sees
+function probe() {
+  const t0 = performance.now();
+  fetch(q('/phone/ping'), { cache: 'no-store' })
+    .then(r => localLog(t('probe GET /phone/ping -> {0} in {1} ms', r.status, Math.round(performance.now() - t0))))
+    .catch(e => localLog(t('probe GET /phone/ping failed too: {0}', e.name + ': ' + e.message)));
+}
+function setPc(ok) { pcOk = ok; $('d-pc').className = 'dot' + (ok ? ' on' : ''); $('t-pc').textContent = ok ? t('PC: OK') : t('PC: no connection'); }
+const hex = dv => Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+
+function parse(dv) {                       // FTMS Indoor Bike Data, for the phone's own display
+  const f = dv.getUint16(0, true); let o = 2; const r = {};
+  if (!(f & 1)) o += 2;
+  if (f & 2) o += 2;
+  if (f & 4) { r.cad = dv.getUint16(o, true) / 2; o += 2; }
+  if (f & 8) o += 2;
+  if (f & 16) o += 3;
+  if (f & 32) o += 2;
+  if (f & 64) { r.pw = dv.getInt16(o, true); }
+  return r;
+}
+
+function ctrlWrite(bytes) {                // one write at a time (GATT does not queue for us)
+  writing = writing.then(async () => {
+    if (!cp) return;
+    const v = new Uint8Array(bytes);
+    try { await (cp.writeValueWithResponse ? cp.writeValueWithResponse(v) : cp.writeValue(v)); }
+    catch (e) { log(t('writing to the trainer failed: {0}', e.message)); }
+  });
+  return writing;
+}
+function sendGrade(force) {
+  const now = Date.now();
+  if (!force && sentGrade !== null && Math.abs(grade - sentGrade) < 0.1 && now - lastSend < 1000) return;
+  const g = Math.round(grade * 100), b = new ArrayBuffer(7), dv = new DataView(b);
+  dv.setUint8(0, 0x11); dv.setInt16(1, 0, true); dv.setInt16(3, g, true); dv.setUint8(5, 40); dv.setUint8(6, 51);
+  sentGrade = grade; lastSend = now; ctrlWrite(b);
+}
+
+async function connect() {
+  wantConn = true; showMsg('');
+  if (!navigator.bluetooth) {
+    showMsg(t('This browser has no Web Bluetooth, or the page is not on HTTPS. On an iPhone open this address in the Bluefy app (not Safari), after installing and trusting the certificate.'));
+    return;
+  }
+  $('go').disabled = true; $('go').textContent = t('Connecting…');
+  try {
+    if (!dev) dev = await navigator.bluetooth.requestDevice({ filters: [{ services: [FTMS] }] });
+    dev.removeEventListener('gattserverdisconnected', onGone); dev.addEventListener('gattserverdisconnected', onGone);
+    log(t('connecting to {0}', dev.name || t('the trainer')));
+    const srv = await dev.gatt.connect();
+    const svc = await srv.getPrimaryService(FTMS);
+    const data = await svc.getCharacteristic(BIKE);
+    data.addEventListener('characteristicvaluechanged', e => {
+      const dv = e.target.value;
+      post('/phone/data', { hex: hex(dv) });
+      const r = parse(dv); if (r.pw !== undefined) $('pw').textContent = Math.max(0, r.pw); if (r.cad !== undefined) $('cd').textContent = Math.round(r.cad);
+    });
+    await data.startNotifications();
+    cp = await svc.getCharacteristic(CTRL);
+    cp.addEventListener('characteristicvaluechanged', e => post('/phone/status', { kind: 'cp', hex: hex(e.target.value).replace(/ /g, '') }));
+    await cp.startNotifications();
+    await ctrlWrite([0x00]);               // request control
+    await ctrlWrite([0x07]);               // start / resume
+    sendGrade(true);
+    $('d-ble').className = 'dot on'; $('t-ble').textContent = t('trainer: {0}', dev.name || 'OK');
+    $('go').textContent = t('Connected'); post('/phone/status', { kind: 'connected', name: dev.name || 'trainer' });
+    log(t('connected, waiting for you to pedal'));
+    try { wake = await navigator.wakeLock.request('screen'); } catch (e) { log(t('the screen may turn off (no Wake Lock)')); }
+  } catch (e) {
+    log(t('error: {0}', e.name + ': ' + e.message));
+    showMsg(e.name === 'NotFoundError' ? t('No trainer chosen. Press the button and pick it (close Zwift Companion first).') : t('Could not connect: {0}', e.message));
+    $('go').disabled = false; $('go').textContent = t('Try again');
+  }
+}
+function onGone() {
+  $('d-ble').className = 'dot warn'; $('t-ble').textContent = t('trainer: disconnected'); cp = null;
+  post('/phone/status', { kind: 'disconnected' }); log(t('trainer disconnected, retrying in 3 s'));
+  if (wantConn) setTimeout(connect, 3000);
+}
+$('go').onclick = connect;
+
+
+// ---------------- Zwift Click (steering) ----------------
+const ZSVC = ['00000001-19ca-4651-86e5-fa29dcdd09d1', '0000fc82-0000-1000-8000-00805f9b34fb'];
+const ZASYNC = '00000002-19ca-4651-86e5-fa29dcdd09d1', ZRX = '00000003-19ca-4651-86e5-fa29dcdd09d1', ZTX = '00000004-19ca-4651-86e5-fa29dcdd09d1';
+let clickDev = null, wantClick = false, pressed = new Set(), pressedRaw = new Set(), clickLogged = 0, lastPressedKey = '';
+const RIDEON = new Uint8Array([0x52, 0x69, 0x64, 0x65, 0x4f, 0x6e]);
+
+// <decoders> pure functions, unit-tested in tests/js
+function varint(b, i) { let v = 0, s = 0, n = 0; while (i + n < b.length) { const x = b[i + n++]; v += (x & 0x7f) * Math.pow(2, s); s += 7; if (!(x & 0x80)) break; } return [v, n]; }
+function fields(b) {                      // protobuf: field number -> varint value (varints only, enough for the keypad messages)
+  const f = {}; let i = 0;
+  while (i < b.length) {
+    const [tag, n] = varint(b, i); i += n; const wt = tag & 7, fn = tag >> 3;
+    if (wt === 0) { const [v, m] = varint(b, i); i += m; f[fn] = v; }
+    else if (wt === 2) { const [l, m] = varint(b, i); i += m + l; }
+    else if (wt === 1) i += 8; else if (wt === 5) i += 4; else break;
+  }
+  return f;
+}
+// what the buttons do in the game
+const RIDE_MASK = { LEFT: 1, UP: 2, RIGHT: 4, DOWN: 8, A: 16, B: 32, Y: 64, Z: 256, SHIFT_UP_L: 512, SHIFT_DN_L: 1024, SHIFT_UP_R: 8192, SHIFT_DN_R: 16384 };
+function actionsFrom(type, b) {
+  const act = new Set(), msg = b.slice(1);
+  if (type === 0x37) {                    // Click v1: Button_Plus (1), Button_Minus (2); 0 = pressed, a missing field = 0
+    const f = fields(msg), plus = (f[1] ?? 0) === 0, minus = (f[2] ?? 0) === 0;
+    if (minus) act.add('left'); if (plus) act.add('right');
+  } else if (type === 0x23) {             // Click v2 / Ride: ButtonMap (1), a pressed button is a cleared bit
+    const f = fields(msg); if (f[1] === undefined) return null;
+    const m = f[1], on = k => (m & RIDE_MASK[k]) === 0;
+    if (on('LEFT') || on('Z') || on('SHIFT_UP_L')) act.add('left');
+    if (on('RIGHT') || on('A') || on('SHIFT_UP_R')) act.add('right');
+    if (on('DOWN') || on('B')) act.add('brake');
+  } else return null;
+  return act;
+}
+// the physical buttons by name (the game decides what each does); a Click v1 has only - and +, which steer
+function rawFrom(type, b) {
+  const raw = new Set(), msg = b.slice(1);
+  if (type === 0x37) {
+    const f = fields(msg);
+    if ((f[2] ?? 0) === 0) raw.add('LEFT'); if ((f[1] ?? 0) === 0) raw.add('RIGHT');
+  } else if (type === 0x23) {
+    const f = fields(msg); if (f[1] === undefined) return null;
+    const m = f[1];
+    for (const [name, k] of [['LEFT', 'LEFT'], ['RIGHT', 'RIGHT'], ['UP', 'UP'], ['DOWN', 'DOWN'], ['A', 'A'], ['B', 'B'], ['Y', 'Y'], ['Z', 'Z'], ['MINUS', 'SHIFT_UP_L'], ['PLUS', 'SHIFT_UP_R']])
+      if ((m & RIDE_MASK[k]) === 0) raw.add(name);
+  } else return null;
+  return raw;
+}
+// </decoders>
+function onClickPacket(dv) {
+  const b = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
+  if (clickLogged < 120 && b[0] !== 0x15 && b[0] !== 0x19) { clickLogged++; log('Click: ' + hex(dv)); }
+  const act = actionsFrom(b[0], b);
+  if (act === null) return;
+  pressed = act; pressedRaw = rawFrom(b[0], b) || new Set(); pushButtons(false);
+}
+function pushButtons(force) {
+  const key = [...pressed].sort().join(',') + '|' + [...pressedRaw].sort().join(',');
+  $('btns').textContent = pressedRaw.size ? [...pressedRaw].join(' + ') : (pressed.size ? [...pressed].join(' + ') : '-');
+  if (force || key !== lastPressedKey) { lastPressedKey = key; post('/phone/buttons', { pressed: [...pressed], raw: [...pressedRaw] }); }
+}
+setInterval(() => { if (pressed.size || pressedRaw.size) pushButtons(true); }, 400);   // heartbeat: the PC releases a key it stopped hearing about
+
+
+// Zwift controllers are told apart by the Zwift service UUID in their advertisement and by the
+// manufacturer data of company 0x094A, not by name. Try the narrowest list first, the full list last.
+let showAllDevices = false;
+async function pickClick() {
+  if (showAllDevices) return navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ZSVC });
+  const bySvc = [{ services: [ZSVC[0]] }, { services: [0xfc82] }];
+  const tries = [
+    [...bySvc, { manufacturerData: [{ companyIdentifier: 0x094A }] }, { namePrefix: 'Zwift' }, { namePrefix: 'ZWIFT' }],
+    [...bySvc, { namePrefix: 'Zwift' }, { namePrefix: 'ZWIFT' }],
+    bySvc,
+  ];
+  let last = null;
+  for (const filters of tries) {
+    try { return await navigator.bluetooth.requestDevice({ filters, optionalServices: ZSVC }); }
+    catch (e) { last = e; if (e.name !== 'TypeError') throw e; }   // an unsupported filter kind: try the next, shorter list
+  }
+  throw last;
+}
+async function connectClick() {
+  wantClick = true; showMsg('');
+  if (!navigator.bluetooth) { showMsg(t('No Web Bluetooth (on an iPhone open this page in Bluefy).')); return; }
+  $('goclick').disabled = true; $('goclick').textContent = t('Connecting…');
+  try {
+    if (!clickDev) clickDev = await pickClick();
+    clickDev.removeEventListener('gattserverdisconnected', onClickGone); clickDev.addEventListener('gattserverdisconnected', onClickGone);
+    log(t('Click: connecting to {0}', clickDev.name || t('the controller')));
+    const srv = await clickDev.gatt.connect();
+    let svc = null;
+    for (const u of ZSVC) { try { svc = await srv.getPrimaryService(u); break; } catch (e) {} }
+    if (!svc) throw new Error(t('no Zwift service (the controller is locked, or it is not a Zwift Click)'));
+    const a = await svc.getCharacteristic(ZASYNC), tx = await svc.getCharacteristic(ZTX), rx = await svc.getCharacteristic(ZRX);
+    a.addEventListener('characteristicvaluechanged', e => onClickPacket(e.target.value));
+    tx.addEventListener('characteristicvaluechanged', e => onClickPacket(e.target.value));
+    await a.startNotifications(); await tx.startNotifications();
+    await (rx.writeValueWithoutResponse ? rx.writeValueWithoutResponse(RIDEON) : rx.writeValue(RIDEON));
+    $('d-click').className = 'dot on'; $('t-click').textContent = t('controls: {0}', clickDev.name || 'OK');
+    $('goclick').textContent = t('Controls connected');
+    log(t('Click connected ({0})', clickDev.name || '?'));
+  } catch (e) {
+    log(t('Click error: {0}', e.name + ': ' + e.message));
+    showMsg(e.name === 'NotFoundError' ? t('No controller chosen (or the list was empty). Wake the Click with a button press, close Zwift Companion, or use "Show all Bluetooth devices".') : t('Controls: {0}', e.message));
+    $('goclick').disabled = false; $('goclick').textContent = t('Try again (Zwift Click)');
+  }
+}
+function onClickGone() {
+  $('d-click').className = 'dot warn'; $('t-click').textContent = t('controls: disconnected'); pressed = new Set(); pressedRaw = new Set(); pushButtons(true);
+  log(t('Click disconnected')); if (wantClick) setTimeout(connectClick, 3000);
+}
+$('goclick').onclick = connectClick;
+$('showall').onclick = e => { e.preventDefault(); showAllDevices = true; clickDev = null; connectClick(); };
+
+// gradient from the game, via the PC
+function listen() {
+  const es = new EventSource(q('/phone/events'));
+  es.onopen = () => setPc(true);
+  es.onmessage = m => { grade = JSON.parse(m.data).grade; $('gr').textContent = grade.toFixed(1); setPc(true); if (cp) sendGrade(false); };
+  es.onerror = () => { localLog(t('the gradient stream from the PC was interrupted, reconnecting')); setPc(false); es.close(); setTimeout(listen, 1500); };
+}
+listen();
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && dev && dev.gatt.connected) { try { wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
+});
+if (!navigator.bluetooth) showMsg(t('No Web Bluetooth in this browser. On an iPhone open this address in the Bluefy app (after installing the certificate).'));
+translateDom();
+</script>
+</body>
+</html>

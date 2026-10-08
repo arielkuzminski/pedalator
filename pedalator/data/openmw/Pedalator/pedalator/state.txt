@@ -1,0 +1,1 @@
+n=0;move=0;turn=0;look=0;atk=0;jump=0;draw=0;power=0

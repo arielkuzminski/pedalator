@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question or "does it work with my trainer?"
+    url: https://github.com/arielkuzminski/pedalator/discussions
+    about: Ask here (if Discussions are enabled) or open a "Works / does not work" issue.
