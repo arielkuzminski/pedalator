@@ -26,6 +26,9 @@
   .cell small { font-size:15px; color:var(--dim); margin-left:4px; }
   #msg { margin-top:14px; padding:12px 14px; border-radius:12px; background:#1b1424; border:1px solid #5b2a45; color:#ffb3c1; display:none; }
   #msg.show { display:block; }
+  #notice { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#2a3350; color:#fff; padding:14px 22px;
+            border-radius:14px; font-size:20px; font-weight:700; display:none; border:1px solid var(--accent); z-index:5; }
+  #notice.show { display:block; }
   pre { margin:14px 0 0; padding:10px 12px; background:#0a0e18; border:1px solid var(--line); border-radius:10px; font:12px/1.5 Menlo, monospace;
         color:#b9c6e4; max-height:200px; overflow:auto; white-space:pre-wrap; -webkit-user-select:text; user-select:text; }
   .hint { color:var(--dim); font-size:14px; margin-top:10px; }
@@ -42,10 +45,12 @@
 <button class="main" id="goclick" style="margin-top:10px;background:#2a3350;font-size:18px;padding:16px">Connect Zwift Click controls</button>
 <div class="hint" style="margin-top:6px">List empty? <a href="#" id="showall" style="color:#6c8cff">Show all Bluetooth devices</a></div>
 <div id="msg"></div>
+<div id="notice"></div>
 <div class="grid">
   <div class="cell wide"><span>Power</span><b id="pw">0</b><small>W</small></div>
   <div class="cell"><span>Cadence</span><b id="cd">0</b><small>rpm</small></div>
   <div class="cell"><span>Grade</span><b id="gr">0.0</b><small>%</small></div>
+  <div class="cell"><span>Hills felt</span><b id="df">40</b><small>%</small></div>
 </div>
 <div class="cell wide" style="margin-top:12px"><span>Controls</span><b id="btns" style="font-size:28px">-</b></div>
 <div class="hint">Keep this screen on and the browser in front while you ride. Close Zwift Companion and any other app connected to the trainer.</div>
@@ -55,6 +60,8 @@
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'Hills felt': 'Odczuwane górki',
+  'Hills felt: {0} %': 'Odczuwane górki: {0} %',
   'trainer: none': 'trenażer: brak',
   'PC: …': 'komputer: …',
   'controls: none': 'kontrolki: brak',
@@ -122,6 +129,13 @@ function log(m) {
   logLines.push(new Date().toLocaleTimeString() + '  ' + m); if (logLines.length > 40) logLines.shift();
   $('log').textContent = logLines.join('\n'); $('log').scrollTop = 1e9;
   post('/phone/status', { kind: 'log', msg: m });
+}
+let noticeTimer = null;
+function showNotice(n) {                  // "difficulty:60" -> a banner for two seconds
+  const [kind, value] = n.split(':');
+  if (kind !== 'difficulty') return;
+  const el = $('notice'); el.textContent = t('Hills felt: {0} %', value); el.classList.add('show');
+  clearTimeout(noticeTimer); noticeTimer = setTimeout(() => el.classList.remove('show'), 2000);
 }
 function showMsg(t) { $('msg').textContent = t; $('msg').classList.toggle('show', !!t); }
 let postFails = 0, lastFailLog = 0, lastOk = 0;
@@ -269,8 +283,8 @@ function actionsFrom(type, b) {
   } else if (type === 0x23) {             // Click v2 / Ride: ButtonMap (1), a pressed button is a cleared bit
     const f = fields(msg); if (f[1] === undefined) return null;
     const m = f[1], on = k => (m & RIDE_MASK[k]) === 0;
-    if (on('LEFT') || on('Z') || on('SHIFT_UP_L')) act.add('left');
-    if (on('RIGHT') || on('A') || on('SHIFT_UP_R')) act.add('right');
+    if (on('LEFT') || on('Z')) act.add('left');            // - and + are the difficulty buttons now
+    if (on('RIGHT') || on('A')) act.add('right');
     if (on('DOWN') || on('B')) act.add('brake');
   } else return null;
   return act;
@@ -360,7 +374,12 @@ $('showall').onclick = e => { e.preventDefault(); showAllDevices = true; clickDe
 function listen() {
   const es = new EventSource(q('/phone/events'));
   es.onopen = () => setPc(true);
-  es.onmessage = m => { grade = JSON.parse(m.data).grade; $('gr').textContent = grade.toFixed(1); setPc(true); if (cp) sendGrade(false); };
+  es.onmessage = m => {
+    const d = JSON.parse(m.data); grade = d.grade; $('gr').textContent = grade.toFixed(1);
+    if (d.difficulty !== undefined) $('df').textContent = Math.round(d.difficulty * 100);
+    if (d.notice) showNotice(d.notice);
+    setPc(true); if (cp) sendGrade(false);
+  };
   es.onerror = () => { localLog(t('the gradient stream from the PC was interrupted, reconnecting')); setPc(false); es.close(); setTimeout(listen, 1500); };
 }
 listen();

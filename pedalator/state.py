@@ -21,6 +21,7 @@ state: dict = {
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",
+    "notice": "", "t_notice": 0.0,   # a short message for the rider, e.g. "difficulty:60" (shown for 3 s)
 }
 
 # riding mode -> (power gain, share of the game's gradient sent to the trainer)
@@ -43,6 +44,15 @@ def log(msg: str) -> None:
 def apply_preset(name: str) -> None:
     state["gain"], state["difficulty"] = PRESETS[name]
     state["preset"] = name
+
+
+def set_notice(text: str) -> None:
+    state["notice"] = text
+    state["t_notice"] = time.time()
+
+
+def current_notice() -> str:
+    return state["notice"] if time.time() - state["t_notice"] < 3.0 else ""
 
 
 def clamp_grade(g: float) -> float:
@@ -72,7 +82,8 @@ def snapshot() -> dict:
     s["age_packet"] = round(now - s["t_packet"], 1) if s["t_packet"] else None
     s["age_udp"] = round(now - s["t_udp"], 1) if s["t_udp"] else None
     s["age_cp"] = round(now - s["t_cp"], 1) if s["t_cp"] else None
-    for k in ("t_packet", "t_udp", "t_cp"):
+    s["notice"] = current_notice()
+    for k in ("t_packet", "t_udp", "t_cp", "t_notice"):
         s.pop(k)
     s["history"] = list(history)
     s["log"] = list(log_lines)

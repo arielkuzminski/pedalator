@@ -62,6 +62,7 @@ async def bridge(args: argparse.Namespace) -> None:
     from . import keys as keyout
     from .certs import lan_ip
     from .dashboard_server import start_dashboard
+    from .difficulty import difficulty_loop
     from .loops import GameUdp, console_status, sampler
     from .paths import find_openmw_log, find_openmw_state, user_data_dir
     from .phone_server import start_phone_servers
@@ -80,7 +81,8 @@ async def bridge(args: argparse.Namespace) -> None:
         start_phone_servers(args.ip or lan_ip(), args.data_dir or user_data_dir(), args.phone_port, args.ca_port)
     loop = asyncio.get_running_loop()
     await loop.create_datagram_endpoint(GameUdp, local_addr=("127.0.0.1", args.game_port))
-    tasks = [asyncio.create_task(sampler()), asyncio.create_task(console_status())]
+    tasks = [asyncio.create_task(sampler()), asyncio.create_task(console_status()),
+             asyncio.create_task(difficulty_loop())]
 
     if args.target == "openmw":
         from .targets import openmw

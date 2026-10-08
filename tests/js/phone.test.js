@@ -56,6 +56,13 @@ test('driving actions for the keys target', () => {
   assert.deepEqual(list(actionsFrom(0x23, v2(ALL & ~64))), []);             // Y does nothing here
 });
 
+test('Click v2: minus and plus are the difficulty buttons and do not steer', () => {
+  assert.deepEqual(list(actionsFrom(0x23, v2(ALL & ~512))), []);            // minus
+  assert.deepEqual(list(actionsFrom(0x23, v2(ALL & ~8192))), []);           // plus
+  assert.deepEqual(list(rawFrom(0x23, v2(ALL & ~512))), ['MINUS']);         // but the PC still hears them
+  assert.deepEqual(list(rawFrom(0x23, v2(ALL & ~8192))), ['PLUS']);
+});
+
 test('battery, keep-alive and unknown messages are ignored', () => {
   assert.equal(rawFrom(0x19, new Uint8Array([0x19, 0, 0x64])), null);
   assert.equal(actionsFrom(0x15, new Uint8Array([0x15])), null);

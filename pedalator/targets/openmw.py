@@ -26,7 +26,7 @@ def state_line(n: int, power: float, raw: set[str], floor: float = 15.0) -> str:
     held = lambda action: 1 if BUTTONS[action] in raw else 0           # noqa: E731
     return (f"n={n};move={throttle_for(power, floor):.3f};turn={held('turn_right') - held('turn_left')};"
             f"look={held('look_down') - held('look_up')};atk={held('attack')};jump={held('jump')};"
-            f"draw={held('draw_weapon')};power={int(power)}\n")
+            f"draw={held('draw_weapon')};power={int(power)};diff={round(state['difficulty'] * 100)}\n")
 
 
 def parse_grades(chunk: bytes) -> list[float]:

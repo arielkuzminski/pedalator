@@ -32,6 +32,7 @@ Start OpenMW and load a save. While Pedalator is running and the trainer sends d
 | **B** | attack (hold = charged blow; a spell is cast once per press) |
 | **A** | jump |
 | **Y** | draw / sheathe the weapon |
+| **− / +** | difficulty: fewer / more of the game's hills on the trainer; the mod shows the new value on screen |
 | **Z** | use — open, take, talk. Pedalator presses the game's *use* key: `E` by default, change with `--openmw-use-key f\|space\|enter` to match your OpenMW key bindings |
 
 The mapping is the `BUTTONS` table in [`pedalator/targets/openmw.py`](../../pedalator/targets/openmw.py).

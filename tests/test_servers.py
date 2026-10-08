@@ -98,7 +98,8 @@ def test_gradient_stream_sends_the_effective_grade(phone):
     c.request("GET", f"/phone/events?t={phone['token']}")
     r = c.getresponse()
     assert r.status == 200 and r.getheader("Content-Type") == "text/event-stream"
-    assert json.loads(r.fp.readline().decode().split("data: ")[1]) == {"grade": 5.0}
+    msg = json.loads(r.fp.readline().decode().split("data: ")[1])
+    assert msg["grade"] == 5.0 and msg["difficulty"] == 1.0 and msg["notice"] == ""
     c.close()
 
 

@@ -22,8 +22,8 @@ The phone page reports the **physical buttons** to the PC (`LEFT RIGHT UP DOWN A
 
 | Click v2 | Click v1 | Action |
 |---|---|---|
-| ◀ (left puck), Z, − | − | steer left |
-| ▶ (left puck), A, + | + | steer right |
+| ◀ (left puck), Z | − | steer left |
+| ▶ (left puck), A | + | steer right |
 | ▼, B | – | brake |
 
 **OpenMW target:**
@@ -36,11 +36,11 @@ The phone page reports the **physical buttons** to the PC (`LEFT RIGHT UP DOWN A
 | A | jump |
 | Y | draw / sheathe the weapon |
 | Z | use (presses `E`) |
-| − / + | free |
+| − / + | difficulty: fewer / more of the game's hills on the trainer |
 
-On a Click v1 the two buttons turn left / right in the OpenMW target as well.
+On a Click v1 the two buttons turn left / right (there are no other buttons to spare), so it has no difficulty buttons.
 
-> **Planned:** − and + will change the trainer's difficulty ([roadmap, milestone 5](roadmap.md#5-click--and--change-the-trainers-difficulty)); the key and button mappings will become editable profiles ([milestone 3](roadmap.md#3-profiles-import-and-export-of-a-games-configuration-remappable-keys-in-the-dashboard)).
+> **Difficulty buttons.** On a Click v2, **−** and **+** change how much of the game's hills the trainer simulates, by 10 percentage points per press (holding repeats). The dashboard, the phone page and, in OpenMW, a message in the game show the new value. **Planned:** the button mappings will become editable profiles ([roadmap, milestone 3](roadmap.md#3-profiles-import-and-export-of-a-games-configuration-remappable-keys-in-the-dashboard)).
 
 ## How the connection works
 

@@ -6,7 +6,7 @@ Pedalator works today with [OpenMW](games/openmw.md), [openOMSI](games/openomsi.
 
 The five milestones the maintainer plans to build first, in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
 
-> Suggested order: **5 → 1 → 2 → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
+> Suggested order: **5 ✅ → 1 → 2 → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
 
 ### 1. Zwift Click over the PC's Bluetooth (no phone)
 
@@ -58,7 +58,7 @@ Built-in profiles ship in the package (`morrowind`, `omsi`, `generic-wasd`); you
 
 **Done when.** A new keys-only game can be added through the wizard without touching Python.
 
-### 5. Click + and − change the trainer's difficulty
+### 5. Click + and − change the trainer's difficulty — ✅ done
 
 **Why.** Hills too hard on a long climb? Change it without leaving the saddle.
 
@@ -67,6 +67,8 @@ Built-in profiles ship in the package (`morrowind`, `omsi`, `generic-wasd`); you
 **To settle.** On a Click v2 − and + currently steer in the `keys` target and are free in OpenMW; they would move to difficulty, while the arrows on the left puck keep steering. On a Click v1 (two buttons) steering stays, unless a profile says otherwise (milestone 3).
 
 **Done when.** Pressing + or − changes `state["difficulty"]`, the dashboard and the trainer's resistance follow, and the value is remembered in the profile.
+
+**Status.** Built (`pedalator/difficulty.py`): ±10 points per press, repeat while held, feedback on the dashboard, the phone page and in OpenMW. "Remembered in the profile" arrives with milestone 3.
 
 ## What makes a game easy to connect
 

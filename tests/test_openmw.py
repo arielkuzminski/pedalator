@@ -22,7 +22,8 @@ def test_state_line_for_each_click_button():
     assert fields(openmw.state_line(2, 0, {"DOWN"}))["look"] == "1"
     f = fields(openmw.state_line(2, 0, {"B", "A", "Y"}))
     assert (f["atk"], f["jump"], f["draw"]) == ("1", "1", "1")
-    assert openmw.state_line(7, 0, {"PLUS", "MINUS"}).endswith("power=0\n")      # unmapped buttons do nothing
+    nothing = fields(openmw.state_line(7, 0, {"PLUS", "MINUS"}))               # + and - are the difficulty buttons
+    assert (nothing["turn"], nothing["look"], nothing["atk"], nothing["jump"], nothing["draw"]) == ("0",) * 5
 
 
 def test_state_line_counter_and_coasting():

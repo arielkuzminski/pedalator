@@ -121,6 +121,7 @@ Two sliders fine-tune the *power gain* and the share of the game's hills the tra
 | **A** | jump |
 | **Y** | draw / sheathe the weapon |
 | **Z** | use / open / take / talk (presses the game's *use* key, `E` by default) |
+| **−** / **+** | fewer / more of the game's hills on the trainer (difficulty) |
 
 More in [Zwift Click](docs/zwift-click.md).
 

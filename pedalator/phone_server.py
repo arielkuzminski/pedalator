@@ -19,7 +19,7 @@ from .certs import ensure_certs, load_token
 from .ftms import on_bike_data, on_control_point
 from .keys import KEYMAP
 from .paths import WEB_DIR
-from .state import effective_grade, log, state
+from .state import current_notice, effective_grade, log, state
 
 PHONE_PORT, CA_PORT = 8766, 8767
 
@@ -76,7 +76,9 @@ class PhoneHandler(BaseHTTPRequestHandler):
             log(f"phone/laptop {who}: gradient stream opened")
             try:
                 while True:
-                    self.wfile.write(f"data: {json.dumps({'grade': round(effective_grade(), 2)})}\n\n".encode())
+                    msg = {"grade": round(effective_grade(), 2), "difficulty": state["difficulty"],
+                           "notice": current_notice()}
+                    self.wfile.write(f"data: {json.dumps(msg)}\n\n".encode())
                     self.wfile.flush()
                     time.sleep(0.5)
             except OSError as e:

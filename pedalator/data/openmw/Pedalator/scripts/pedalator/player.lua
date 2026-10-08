@@ -1,7 +1,7 @@
 -- Pedalator for OpenMW: the character walks as fast as the rider pedals (smart trainer + Zwift Click via the Pedalator bridge).
 --
 --   PC -> game : the bridge rewrites  pedalator/state.txt  (a data file of this mod) ~20 times a second:
---                  n=<counter>;move=<0..1>;turn=<-1|0|1>;look=<-1|0|1>;atk=<0|1>;jump=<0|1>;draw=<0|1>;power=<watts>
+--                  n=<counter>;move=<0..1>;turn=<-1|0|1>;look=<-1|0|1>;atk=<0|1>;jump=<0|1>;draw=<0|1>;power=<watts>;diff=<percent>
 --                this script reads it with vfs.open (read only)
 --                (turn: right is +1; look: down is +1; draw: toggles the drawn weapon on each press)
 --                "use" (open / take / talk) is a key the bridge presses in the game window, not handled here
@@ -15,6 +15,7 @@ local vfs = require('openmw.vfs')
 local input = require('openmw.input')
 local types = require('openmw.types')
 local async = require('openmw.async')
+local ui = require('openmw.ui')
 local I = require('openmw.interfaces')
 
 local Actor = types.Actor
@@ -38,7 +39,8 @@ local GRADE_SMOOTH = 0.3
 local DEBUG = false            -- also print what was read (every 2 s)
 
 -- ---- state ----------------------------------------------------------------------------------
-local st = { n = -1, move = 0, turn = 0, look = 0, atk = 0, jump = 0, draw = 0, power = 0 }
+local st = { n = -1, move = 0, turn = 0, look = 0, atk = 0, jump = 0, draw = 0, power = 0, diff = nil }
+local shownDiff = nil
 local lastN, lastChange = nil, 0
 local sinceRead, sinceGrade, sinceDebug = 0, 0, 0
 local movementOverridden, combatOverridden = false, false
@@ -67,7 +69,7 @@ local function readState()
     if t.n == nil or t.move == nil then return false end
     st = {
         n = t.n, move = math.max(0, math.min(1, t.move)), turn = t.turn or 0, look = t.look or 0,
-        atk = t.atk or 0, jump = t.jump or 0, draw = t.draw or 0, power = t.power or 0,
+        atk = t.atk or 0, jump = t.jump or 0, draw = t.draw or 0, power = t.power or 0, diff = t.diff,
     }
     return true
 end
@@ -156,6 +158,12 @@ local function onFrame(dt)
 
     local fresh = lastN ~= nil and (now - lastChange) < STALE_AFTER
     if not fresh then release() return end
+
+    -- Click + / - changed how much of the hills the trainer simulates: say so
+    if st.diff and shownDiff and st.diff ~= shownDiff then
+        ui.showMessage(string.format('Pedalator: hills felt %d %%', st.diff))
+    end
+    shownDiff = st.diff
 
     -- a menu, a dialogue or a paused world: the player has the controls, the character stands still
     if core.isWorldPaused() or I.UI.getMode() then

@@ -121,6 +121,7 @@ Dwa suwaki pozwalają dostroić *wzmocnienie mocy* i część górek z gry, któ
 | **A** | skok |
 | **Y** | wyciągnij / schowaj broń |
 | **Z** | użyj / otwórz / weź / rozmawiaj (naciska klawisz *użyj* z gry, domyślnie `E`) |
+| **−** / **+** | mniej / więcej górek z gry na trenażerze (trudność) |
 
 Więcej w [Zwift Click](docs/zwift-click.md).
 

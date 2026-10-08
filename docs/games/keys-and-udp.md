@@ -18,6 +18,8 @@ python -m pedalator --keys --keyset wasd        # W A S D
 | steer left (Click ◀ / Z) | **4** | **A** |
 | steer right (Click ▶ / A) | **6** | **D** |
 
+Click **−** / **+** change the [difficulty](../zwift-click.md#buttons-in-pedalator) instead of steering.
+
 Keys are sent as hardware scan codes (`SendInput`) to the window in front — keep the game in front. Windows only for now.
 
 Because a key is on or off, "gas" is encoded by switching it on and off 20 times a second (PWM). Games that treat a held key as a ramp (most do) simply feel analog. Games that read the *number of presses* will not like it — use the UDP target.

@@ -4,12 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- **Click + and − change the trainer's difficulty** (10 points of the game's hills per press, repeating while held), with feedback on the dashboard, the phone page and in OpenMW. On a Click v2 − and + no longer steer in the `keys` target.
+
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
 - Zwift Click over the PC's Bluetooth, without a phone.
 - Hybrid mode: the trainer on the PC, the Click on a laptop or phone.
 - Profiles: import and export of a game's configuration, remappable keys in the dashboard.
 - A wizard for adding a new game.
-- Click + and − as a difficulty control.
 
 ## [0.1.0] — first public release
 

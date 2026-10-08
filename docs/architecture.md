@@ -65,10 +65,10 @@ The LAN ports exist only with `--remote`; change them with `--phone-port` and `-
 `pedalator/state.txt` in the mod folder, one line, rewritten in place ~20×/s:
 
 ```
-n=1234;move=0.570;turn=-1;look=0;atk=0;jump=0;draw=0;power=143
+n=1234;move=0.570;turn=-1;look=0;atk=0;jump=0;draw=0;power=143;diff=40
 ```
 
-`n` counter (the mod treats the file as stale if it stops changing for 1 s) · `move` 0–1 gas · `turn` −1 left / +1 right · `look` −1 up / +1 down · `atk`, `jump` held 0/1 · `draw` 1 while the button is held (the mod toggles the weapon on the press) · `power` watts.
+`n` counter (the mod treats the file as stale if it stops changing for 1 s) · `move` 0–1 gas · `turn` −1 left / +1 right · `look` −1 up / +1 down · `atk`, `jump` held 0/1 · `draw` 1 while the button is held (the mod toggles the weapon on the press) · `power` watts · `diff` the difficulty (percent of the game's hills the trainer simulates); the mod shows a message when it changes.
 
 The mod prints `PEDALATOR grade=<percent>` into `openmw.log` about four times a second.
 
@@ -89,7 +89,7 @@ The mod prints `PEDALATOR grade=<percent>` into `openmw.log` about four times a 
 | Request | |
 |---|---|
 | `GET /phone` | the page |
-| `GET /phone/events` | SSE: `{"grade": 2.4}` twice a second |
+| `GET /phone/events` | SSE twice a second: `{"grade": 2.4, "difficulty": 0.4, "notice": ""}` |
 | `GET /phone/ping` | `{"ok":true}` |
 | `POST /phone/data` `{"hex":"…"}` | a raw Indoor Bike Data packet |
 | `POST /phone/buttons` `{"pressed":[…],"raw":[…]}` | Click state |
