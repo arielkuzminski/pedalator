@@ -6,9 +6,9 @@ Pedalator works today with [OpenMW](games/openmw.md), [openOMSI](games/openomsi.
 
 The five milestones the maintainer plans to build first, in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
 
-> Suggested order: **5 ✅ → 1 → 2 → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
+> Suggested order: **5 ✅ → 1 (built, awaiting a hardware test) → 2 → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
 
-### 1. Zwift Click over the PC's Bluetooth (no phone)
+### 1. Zwift Click over the PC's Bluetooth (no phone) — built, needs a hardware test
 
 **Why.** With a USB Bluetooth 5 adapter the PC reads the trainer itself, but today the Click is read only by the phone/laptop page. One device, no browser, no certificates.
 
@@ -17,6 +17,8 @@ The five milestones the maintainer plans to build first, in the order of the sug
 **Risks.** Needs a BLE-central adapter; a Click accepts one connection (so not the phone page at the same time); the first run on real hardware.
 
 **Done when.** `pedalator --target openmw` with a USB adapter reads the trainer *and* the Click, every button works, and no phone is involved.
+
+**Status.** Built (`pedalator/click.py`) and tested against a fake `bleak` and shared decoder vectors; **not yet tried on a real Click through the PC's adapter**. Scans of the trainer and the Click are serialised.
 
 ### 2. Hybrid mode: trainer on the PC, Click on a laptop or phone
 

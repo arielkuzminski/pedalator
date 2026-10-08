@@ -107,6 +107,11 @@ class PhoneHandler(BaseHTTPRequestHandler):
                 elif kind == "disconnected":
                     state["connected"] = False
                     log("phone: trainer disconnected")
+                elif kind == "click":
+                    state.update(click_connected=bool(body.get("connected")), click_name=str(body.get("name") or "Zwift Click")[:60])
+                    if not state["click_connected"]:
+                        state.update(raw=[], buttons=[])
+                    log(f"phone: Zwift Click {'connected: ' + state['click_name'] if state['click_connected'] else 'disconnected'}")
                 elif kind == "cp":
                     on_control_point(None, bytearray.fromhex(body["hex"]))
                 elif kind == "log":

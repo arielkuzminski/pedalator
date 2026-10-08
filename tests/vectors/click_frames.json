@@ -1,0 +1,205 @@
+[
+ {
+  "name": "v2 nothing pressed (real frame)",
+  "hex": "23 08 ff ff ff ff 0f",
+  "raw": [],
+  "actions": []
+ },
+ {
+  "name": "v2 LEFT (real frame)",
+  "hex": "23 08 fe ff ff ff 0f",
+  "raw": [
+   "LEFT"
+  ],
+  "actions": [
+   "left"
+  ]
+ },
+ {
+  "name": "v2 RIGHT (real frame)",
+  "hex": "23 08 fb ff ff ff 0f",
+  "raw": [
+   "RIGHT"
+  ],
+  "actions": [
+   "right"
+  ]
+ },
+ {
+  "name": "v2 LEFT",
+  "hex": "23 08 fe ff ff ff 0f",
+  "raw": [
+   "LEFT"
+  ],
+  "actions": [
+   "left"
+  ]
+ },
+ {
+  "name": "v2 UP",
+  "hex": "23 08 fd ff ff ff 0f",
+  "raw": [
+   "UP"
+  ],
+  "actions": []
+ },
+ {
+  "name": "v2 RIGHT",
+  "hex": "23 08 fb ff ff ff 0f",
+  "raw": [
+   "RIGHT"
+  ],
+  "actions": [
+   "right"
+  ]
+ },
+ {
+  "name": "v2 DOWN",
+  "hex": "23 08 f7 ff ff ff 0f",
+  "raw": [
+   "DOWN"
+  ],
+  "actions": [
+   "brake"
+  ]
+ },
+ {
+  "name": "v2 A",
+  "hex": "23 08 ef ff ff ff 0f",
+  "raw": [
+   "A"
+  ],
+  "actions": [
+   "right"
+  ]
+ },
+ {
+  "name": "v2 B",
+  "hex": "23 08 df ff ff ff 0f",
+  "raw": [
+   "B"
+  ],
+  "actions": [
+   "brake"
+  ]
+ },
+ {
+  "name": "v2 Y",
+  "hex": "23 08 bf ff ff ff 0f",
+  "raw": [
+   "Y"
+  ],
+  "actions": []
+ },
+ {
+  "name": "v2 Z",
+  "hex": "23 08 ff fd ff ff 0f",
+  "raw": [
+   "Z"
+  ],
+  "actions": [
+   "left"
+  ]
+ },
+ {
+  "name": "v2 MINUS",
+  "hex": "23 08 ff fb ff ff 0f",
+  "raw": [
+   "MINUS"
+  ],
+  "actions": []
+ },
+ {
+  "name": "v2 PLUS",
+  "hex": "23 08 ff bf ff ff 0f",
+  "raw": [
+   "PLUS"
+  ],
+  "actions": []
+ },
+ {
+  "name": "v2 B and UP together",
+  "hex": "23 08 dd ff ff ff 0f",
+  "raw": [
+   "B",
+   "UP"
+  ],
+  "actions": [
+   "brake"
+  ]
+ },
+ {
+  "name": "v2 Z and A together",
+  "hex": "23 08 ef fd ff ff 0f",
+  "raw": [
+   "A",
+   "Z"
+  ],
+  "actions": [
+   "left",
+   "right"
+  ]
+ },
+ {
+  "name": "v1 nothing pressed",
+  "hex": "37 08 01 10 01",
+  "raw": [],
+  "actions": []
+ },
+ {
+  "name": "v1 minus pressed",
+  "hex": "37 08 01 10 00",
+  "raw": [
+   "LEFT"
+  ],
+  "actions": [
+   "left"
+  ]
+ },
+ {
+  "name": "v1 plus pressed",
+  "hex": "37 08 00 10 01",
+  "raw": [
+   "RIGHT"
+  ],
+  "actions": [
+   "right"
+  ]
+ },
+ {
+  "name": "v1 a missing field counts as pressed",
+  "hex": "37 10 00",
+  "raw": [
+   "LEFT",
+   "RIGHT"
+  ],
+  "actions": [
+   "left",
+   "right"
+  ]
+ },
+ {
+  "name": "battery",
+  "hex": "19 10 64",
+  "raw": null,
+  "actions": null
+ },
+ {
+  "name": "keep-alive",
+  "hex": "15",
+  "raw": null,
+  "actions": null
+ },
+ {
+  "name": "device information",
+  "hex": "2a 08 03 12 12",
+  "raw": null,
+  "actions": null
+ },
+ {
+  "name": "a v2 frame without a ButtonMap",
+  "hex": "23",
+  "raw": null,
+  "actions": null
+ }
+]

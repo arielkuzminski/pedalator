@@ -2,7 +2,7 @@
 
 Reading a trainer needs a Bluetooth adapter that can act as a BLE *central*. Plenty of desktop PCs have older adapters that cannot — Windows then reports *"BLE 'central' role not supported on this adapter"*. In **phone mode** a phone or a laptop does the Bluetooth part in its browser (Web Bluetooth) and sends the data to the PC over your Wi-Fi/LAN.
 
-The cheaper permanent fix is a USB Bluetooth 5.0 adapter (a few euros). Then you do not need any of this.
+The cheaper permanent fix is a USB Bluetooth 5.0 adapter (a few euros). With it the PC reads **both the trainer and the Zwift Click** itself and you do not need any of this.
 
 ```
 trainer, Zwift Click  ──Bluetooth──▶  phone / laptop browser  ──HTTPS over your LAN──▶  PC (Pedalator)  ──▶  game

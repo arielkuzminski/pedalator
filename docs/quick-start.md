@@ -36,7 +36,7 @@ Close every other app that uses the trainer (Zwift, a phone app, a head unit) �
 python -m pedalator
 ```
 
-It scans for a trainer for 8 seconds and connects. The dashboard's first light turns green and the power gauge moves when you pedal.
+It scans for a trainer for 8 seconds and connects; if a **Zwift Click** is awake nearby it connects to that too (`--click off` to skip it). The dashboard's lights turn green and the power gauge moves when you pedal.
 
 - *"BLE 'central' role not supported on this adapter"* → your PC's Bluetooth is too old: use [phone mode](phone-mode.md) (`--remote`).
 - *"no FTMS trainer found"* → wake the trainer by spinning the pedals, close other apps, move closer.

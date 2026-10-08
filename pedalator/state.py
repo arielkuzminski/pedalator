@@ -18,6 +18,7 @@ state: dict = {
     "t_packet": 0.0, "t_udp": 0.0, "t_cp": 0.0, "raw_hex": "", "cp_last": "-",
     "game_speed": 0.0, "pmax": 250, "keys": False, "keyset": "numpad",
     "buttons": [], "raw": [], "t_buttons": 0.0,
+    "click_connected": False, "click_name": "-",   # the Zwift Click: read by the PC or by the phone page
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",

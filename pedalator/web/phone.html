@@ -356,6 +356,7 @@ async function connectClick() {
     await (rx.writeValueWithoutResponse ? rx.writeValueWithoutResponse(RIDEON) : rx.writeValue(RIDEON));
     $('d-click').className = 'dot on'; $('t-click').textContent = t('controls: {0}', clickDev.name || 'OK');
     $('goclick').textContent = t('Controls connected');
+    post('/phone/status', { kind: 'click', connected: true, name: clickDev.name || 'Zwift Click' });
     log(t('Click connected ({0})', clickDev.name || '?'));
   } catch (e) {
     log(t('Click error: {0}', e.name + ': ' + e.message));
@@ -364,6 +365,7 @@ async function connectClick() {
   }
 }
 function onClickGone() {
+  post('/phone/status', { kind: 'click', connected: false });
   $('d-click').className = 'dot warn'; $('t-click').textContent = t('controls: disconnected'); pressed = new Set(); pressedRaw = new Set(); pushButtons(true);
   log(t('Click disconnected')); if (wantClick) setTimeout(connectClick, 3000);
 }

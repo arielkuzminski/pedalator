@@ -24,7 +24,7 @@
 - **Pedałowanie to gaz.** Moc z trenażera Bluetooth napędza grę: im mocniej pedałujesz, tym szybciej idziesz lub jedziesz.
 - **Górki oddają.** Gra mówi Pedalatorowi, jak stromy jest teren, a trenażer to symuluje: podjazdy robią się ciężkie, zjazdy lekkie.
 - **Skręcasz kontrolkami Zwift Click.** Małe kontrolery Bluetooth dołączane do trenażera obracają postać, patrzą w górę i w dół, atakują, skaczą, wyciągają broń lub używają przedmiotów.
-- **Bez specjalnego sprzętu w PC.** Jeśli Bluetooth w Twoim komputerze nie dogada się z trenażerem, robi to telefon albo laptop z Chrome ([tryb telefonu](docs/phone-mode.md)).
+- **Bez specjalnego sprzętu w PC.** Z adapterem Bluetooth 5 komputer sam czyta trenażer i Click. Jeśli Bluetooth w Twoim komputerze nie dogada się z trenażerem, robi to telefon albo laptop z Chrome ([tryb telefonu](docs/phone-mode.md)).
 - **Panel** pokazuje moc, kadencję, prędkość, nachylenie, historię z dwóch minut i podgląd debugowania, a także pozwala wybrać, jak łatwa ma być jazda.
 
 > Powstało podczas jazdy po **Morrowindzie** w [OpenMW](https://openmw.org) i na rowerze w symulatorze autobusu [openOMSI](https://github.com/openOMSI-Project/openOMSI), na trenażerze Van Rysel D500 — i jest otwarte na każdą grę, którą da się podłączyć.
@@ -41,7 +41,7 @@
 
 Pedalator to **oprogramowanie w wersji alfa**: autorowi działa na co dzień, ale spodziewaj się zadziorów. Jeśli coś nie działa, otwórz zgłoszenie.
 
-**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): Click czytany przez własny Bluetooth komputera, tryb mieszany (trenażer w PC, Click na laptopie), profile z konfigurowalnymi klawiszami do importu i eksportu, kreator dodawania nowej gry oraz przyciski + / − na Clicku jako regulacja trudności.
+**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): tryb mieszany (trenażer w PC, Click na laptopie), profile z konfigurowalnymi klawiszami do importu i eksportu, kreator dodawania nowej gry.
 
 ## Jak to działa
 

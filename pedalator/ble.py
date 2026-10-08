@@ -18,6 +18,17 @@ from .ftms import (
 )
 from .state import effective_grade, log, state
 
+_scan_lock: asyncio.Lock | None = None
+
+
+def scan_lock() -> asyncio.Lock:
+    """One Bluetooth scan at a time: the trainer and the Click are looked for by separate loops, and two scans
+    running together make Windows' Bluetooth stack fail."""
+    global _scan_lock
+    if _scan_lock is None:
+        _scan_lock = asyncio.Lock()
+    return _scan_lock
+
 
 async def find_trainer(address: str | None):
     """Return (address, name) of the first FTMS trainer in range, or (None, None)."""
@@ -25,7 +36,8 @@ async def find_trainer(address: str | None):
     if address:
         return address, address
     log("scanning for FTMS trainers (8 s)...")
-    devs = await BleakScanner.discover(timeout=8.0, service_uuids=[FTMS], return_adv=True)
+    async with scan_lock():
+        devs = await BleakScanner.discover(timeout=8.0, service_uuids=[FTMS], return_adv=True)
     for addr, (dev, _adv) in devs.items():
         log(f"  found {addr} {dev.name}")
     if not devs:

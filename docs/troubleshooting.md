@@ -31,6 +31,7 @@ Start with the console: Pedalator prints what it sees, and the dashboard's **Deb
 | *no Zwift service (the controller is locked…)* | Some Zwift controllers hide their service until unlocked by Zwift's own app. Unlock it there once, then retry. |
 | Connected but no buttons | Press a button and look at the page's log: `Click: 23 08 …` lines should appear. If they do not, reconnect; if they do but nothing happens in the game, open an issue with those lines. |
 | Left puck dead on a Click v2 | See above (locked). |
+| The PC does not find the Click (`no Zwift Click found…` in the console) | Press a button to wake it, close Zwift Companion and any phone page that has the Click connected (a Click accepts one connection), and keep it within a couple of metres of the PC's adapter. `--click off` disables the search. |
 
 ## Games
 

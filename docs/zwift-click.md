@@ -1,6 +1,11 @@
 # Zwift Click
 
-The Zwift Click is a pair of small Bluetooth controllers meant for gear shifting and in-game actions. Pedalator reads them through the same Web Bluetooth page as the trainer ([phone mode](phone-mode.md)) and turns the buttons into game actions.
+The Zwift Click is a pair of small Bluetooth controllers meant for gear shifting and in-game actions. Pedalator turns their buttons into game actions. It can read the Click in two ways:
+
+- **Over the PC's own Bluetooth** (a USB Bluetooth 5 adapter or a BLE-capable built-in one): the bridge scans for the Click, connects and reads it by itself — `python -m pedalator` does this automatically next to the trainer (`--click off` to disable). No phone is involved.
+- **Through a phone or laptop** with Web Bluetooth ([phone mode](phone-mode.md)): the page reads the Click and sends the buttons over your LAN.
+
+Use one at a time: a Click accepts a single connection.
 
 > Pedalator is not affiliated with Zwift. This page describes what we observed on real controllers; the protocol is Zwift's and may change with firmware updates.
 
@@ -44,9 +49,9 @@ On a Click v1 the two buttons turn left / right (there are no other buttons to s
 
 ## How the connection works
 
-Useful if you want to support another controller or debug.
+Useful if you want to support another controller or debug. The PC's own Bluetooth (`pedalator/click.py`, `bleak`) and the phone page (`web/phone.html`, Web Bluetooth) do the same thing, and their decoders are tested against the same frames in `tests/vectors/click_frames.json`.
 
-- The phone page asks the browser for a device that advertises Zwift's custom service — `00000001-19ca-4651-86e5-fa29dcdd09d1` (Click v1, Play) or `0xFC82` (Click v2, Ride) — or has manufacturer data of company `0x094A` (Zwift). The *name* is not a reliable filter.
+- The PC scans for a device that advertises one of Zwift's services (the name is only a fallback); the phone page asks the browser for a device that advertises Zwift's custom service — `00000001-19ca-4651-86e5-fa29dcdd09d1` (Click v1, Play) or `0xFC82` (Click v2, Ride) — or has manufacturer data of company `0x094A` (Zwift). The *name* is not a reliable filter.
 - It then opens three characteristics of that service: **async** `00000002-…` (notifications), **sync-TX** `00000004-…` (indications), **sync-RX** `00000003-…` (write).
 - It writes the six ASCII bytes `RideOn` to sync-RX. The controller starts to notify.
 - Messages start with a one-byte type:

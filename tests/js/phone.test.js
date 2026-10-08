@@ -69,6 +69,19 @@ test('battery, keep-alive and unknown messages are ignored', () => {
   assert.equal(rawFrom(0x23, new Uint8Array([0x23])), null);                // no ButtonMap field: not a button frame
 });
 
+// ---------------------------------------------------------------- vectors shared with the Python decoder
+test('the decoder agrees with tests/vectors/click_frames.json (the same file the Python tests use)', () => {
+  const vectors = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vectors', 'click_frames.json'), 'utf8'));
+  assert.ok(vectors.length > 10);
+  for (const v of vectors) {
+    const bytes = Uint8Array.from(v.hex.split(' ').map(h => parseInt(h, 16)));
+    const raw = rawFrom(bytes[0], bytes), act = actionsFrom(bytes[0], bytes);
+    if (v.raw === null) { assert.equal(raw, null, v.name); assert.equal(act, null, v.name); continue; }
+    assert.deepEqual(list(raw), v.raw, v.name + ' (raw)');
+    assert.deepEqual(list(act), v.actions, v.name + ' (actions)');
+  }
+});
+
 // ---------------------------------------------------------------- the request queue
 const netCode = between('let postFails = 0', 'function setPc(ok)');
 

@@ -24,7 +24,7 @@
 - **Pedalling is the gas.** Your power from a Bluetooth smart trainer drives the game: the harder you pedal, the faster you go.
 - **Hills push back.** The game tells Pedalator how steep the ground is, and the trainer simulates it — climbs get heavy, descents get light.
 - **Steer with Zwift Click.** The little Bluetooth controllers that come with the trainer turn the character, look up and down, attack, jump, draw a weapon, or use things.
-- **No special PC hardware.** If your PC's Bluetooth cannot talk to a trainer, a phone or a laptop with Chrome does the Bluetooth part ([phone mode](docs/phone-mode.md)).
+- **No special PC hardware.** With a Bluetooth 5 adapter the PC reads the trainer and the Click itself. If your PC's Bluetooth cannot, a phone or a laptop with Chrome does the Bluetooth part ([phone mode](docs/phone-mode.md)).
 - **A dashboard** shows power, cadence, speed, grade, a two-minute history and a debug view, and lets you pick how easy the riding is.
 
 > Born from riding **Morrowind** in [OpenMW](https://openmw.org) and a bus-simulator bicycle in [openOMSI](https://github.com/openOMSI-Project/openOMSI) on a Van Rysel D500 trainer — and open for any game you can connect to it.
@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): the Click over the PC's own Bluetooth, a hybrid mode (trainer on the PC, Click on a laptop), profiles with remappable keys that you can import and export, a wizard for adding a new game, and Click + / − as a difficulty control.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): a hybrid mode (trainer on the PC, Click on a laptop), profiles with remappable keys that you can import and export, a wizard for adding a new game.
 
 ## How it works
 

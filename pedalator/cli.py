@@ -22,6 +22,9 @@ def build_parser() -> argparse.ArgumentParser:
     src = ap.add_argument_group("where the rider data comes from")
     src.add_argument("--remote", action="store_true",
                      help="phone mode: a phone or laptop with Web Bluetooth reads the trainer (for PCs without BLE)")
+    src.add_argument("--click", choices=("auto", "off"), default="auto",
+                     help="read a Zwift Click over this PC's Bluetooth: auto = when the PC reads the trainer itself "
+                          "(not with --remote, where the phone page reads it), off = never")
     src.add_argument("--simulate", action="store_true", help="no trainer: a made-up rider (try the dashboard or a game)")
     src.add_argument("--address", help="Bluetooth address of the trainer (default: scan for the first FTMS trainer)")
     src.add_argument("--ip", help="this PC's LAN address for the phone certificate (default: autodetect)")
@@ -102,6 +105,10 @@ async def bridge(args: argparse.Namespace) -> None:
     elif args.keys:
         log(f"driving keys ({args.keyset}) go to the window in front: throttle by power, steering/brake by Zwift Click")
         tasks += [asyncio.create_task(keyout.throttle_loop()), asyncio.create_task(keyout.buttons_loop())]
+
+    if args.click == "auto" and not args.remote and not args.simulate:
+        from .click import click_loop
+        tasks.append(asyncio.create_task(click_loop()))
 
     if args.simulate:
         from .simulate import simulate

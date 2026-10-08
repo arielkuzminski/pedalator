@@ -7,8 +7,9 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 - **Click + and − change the trainer's difficulty** (10 points of the game's hills per press, repeating while held), with feedback on the dashboard, the phone page and in OpenMW. On a Click v2 − and + no longer steer in the `keys` target.
 
+- **Zwift Click over the PC's own Bluetooth** (`pedalator/click.py`): with a BLE adapter, no phone is needed for the Click. Flag `--click auto|off`; the dashboard shows a *controls* light; trainer and Click scans never overlap. Not yet tested on a real controller through the PC.
+
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
-- Zwift Click over the PC's Bluetooth, without a phone.
 - Hybrid mode: the trainer on the PC, the Click on a laptop or phone.
 - Profiles: import and export of a game's configuration, remappable keys in the dashboard.
 - A wizard for adding a new game.

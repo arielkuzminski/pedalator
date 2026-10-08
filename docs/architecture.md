@@ -23,7 +23,9 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 | `cli.py` | command line; wires the tasks together |
 | `state.py` | the shared state, riding modes, `effective_grade()`, `throttle_for()` |
 | `ftms.py` | FTMS constants, parser of Indoor Bike Data, the simulation command, handlers |
-| `ble.py` | direct Bluetooth LE with `bleak` (scan, connect, write the gradient every second) |
+| `ble.py` | direct Bluetooth LE with `bleak` (scan, connect, write the gradient every second); one scan at a time |
+| `click.py` | the Zwift Click over the PC's Bluetooth: decoder, device finder, session loop |
+| `difficulty.py` | Click + / − change the share of the game's hills |
 | `phone_server.py` | the HTTPS server for the phone page, its data and the gradient stream; the plain-HTTP CA server |
 | `certs.py` | private CA, server certificate, the token, the LAN address |
 | `dashboard_server.py` | the local dashboard and its JSON/SSE API |

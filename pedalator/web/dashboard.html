@@ -101,6 +101,7 @@
       <div class="pill"><i class="dot" id="d-ble"></i><span id="t-ble">trainer: …</span></div>
       <div class="pill"><i class="dot" id="d-game"></i><span id="t-game">game: …</span></div>
       <div class="pill"><i class="dot" id="d-pkt"></i><span id="t-pkt">data: …</span></div>
+      <div class="pill"><i class="dot" id="d-click"></i><span id="t-click">controls: …</span></div>
     </div>
   </header>
 
@@ -198,6 +199,7 @@
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'controls: …': 'kontrolki: …', 'controls: none': 'kontrolki: brak', 'controls: {0}': 'kontrolki: {0}',
   'Hills felt: {0} %': 'Odczuwane górki: {0} %',
   'Lost connection to Pedalator': 'Brak połączenia z Pedalatorem',
   'Start': 'Uruchom',
@@ -380,6 +382,8 @@ function onState() {
   const fresh = s.age_packet !== null && s.age_packet < 2;
   $('d-pkt').className = 'dot' + (fresh ? ' on' : (s.age_packet !== null ? ' warn' : ''));
   $('t-pkt').textContent = fresh ? t('data: flowing') : (s.age_packet !== null ? t('data: stalled {0} s', s.age_packet.toFixed(0)) : t('data: none'));
+  $('d-click').className = 'dot' + (s.click_connected ? ' on' : '');
+  $('t-click').textContent = s.click_connected ? t('controls: {0}', s.click_name) : t('controls: none');
   $('s-avg').textContent = s.avg_power; $('s-max').textContent = s.max_power;
   $('s-dist').textContent = (s.distance / 1000).toFixed(2) + ' km';
   const e = s.elapsed; $('s-time').textContent = String(Math.floor(e / 60)).padStart(2, '0') + ':' + String(e % 60).padStart(2, '0');
