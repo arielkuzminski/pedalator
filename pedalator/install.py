@@ -51,7 +51,8 @@ def install_openmw(user_dir: Path | None, dest: Path | None, dry_run: bool = Fal
     cfg = user_dir / "openmw.cfg"
     dest = dest or (user_dir / "mods" / OPENMW_MOD)
     src = DATA_DIR / "openmw" / OPENMW_MOD
-    text = cfg.read_text(encoding="utf-8", errors="replace")
+    with cfg.open(encoding="utf-8", errors="replace", newline="") as fh:      # keep CRLF as it is
+        text = fh.read()
     new, changes = update_openmw_cfg(text, dest)
     print(f"mod folder : {dest}")
     print(f"config     : {cfg}")
