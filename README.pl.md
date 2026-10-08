@@ -41,6 +41,8 @@
 
 Pedalator to **oprogramowanie w wersji alfa**: autorowi działa na co dzień, ale spodziewaj się zadziorów. Jeśli coś nie działa, otwórz zgłoszenie.
 
+**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): Click czytany przez własny Bluetooth komputera, tryb mieszany (trenażer w PC, Click na laptopie), profile z konfigurowalnymi klawiszami do importu i eksportu, kreator dodawania nowej gry oraz przyciski + / − na Clicku jako regulacja trudności.
+
 ## Jak to działa
 
 ```mermaid

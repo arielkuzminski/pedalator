@@ -40,6 +40,8 @@ The phone page reports the **physical buttons** to the PC (`LEFT RIGHT UP DOWN A
 
 On a Click v1 the two buttons turn left / right in the OpenMW target as well.
 
+> **Planned:** − and + will change the trainer's difficulty ([roadmap, milestone 5](roadmap.md#5-click--and--change-the-trainers-difficulty)); the key and button mappings will become editable profiles ([milestone 3](roadmap.md#3-profiles-import-and-export-of-a-games-configuration-remappable-keys-in-the-dashboard)).
+
 ## How the connection works
 
 Useful if you want to support another controller or debug.

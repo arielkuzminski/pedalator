@@ -41,6 +41,8 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
+**Next up** ([roadmap](docs/roadmap.md#next-up)): the Click over the PC's own Bluetooth, a hybrid mode (trainer on the PC, Click on a laptop), profiles with remappable keys that you can import and export, a wizard for adding a new game, and Click + / − as a difficulty control.
+
 ## How it works
 
 ```mermaid
