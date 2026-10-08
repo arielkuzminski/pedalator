@@ -32,6 +32,8 @@ The five milestones the maintainer plans to build first, in the order of the sug
 
 ### 3. Profiles: import and export of a game's configuration, remappable keys in the dashboard
 
+**Status.** ✅ Done: see [profiles.md](profiles.md). The format is JSON (not Lua); the mod reads its tuning from `config.txt`.
+
 **Why.** Someone else may want other keys for Morrowind, a different attack button, different tuning — without editing source.
 
 **What a profile is.** One JSON file (versioned and validated) per game or setup:
@@ -72,7 +74,7 @@ Built-in profiles ship in the package (`morrowind`, `omsi`, `generic-wasd`); you
 
 **Done when.** Pressing + or − changes `state["difficulty"]`, the dashboard and the trainer's resistance follow, and the value is remembered in the profile.
 
-**Status.** Built (`pedalator/difficulty.py`): ±10 points per press, repeat while held, feedback on the dashboard, the phone page and in OpenMW. "Remembered in the profile" arrives with milestone 3.
+**Status.** Built (`pedalator/difficulty.py`): ±10 points per press, repeat while held, feedback on the dashboard, the phone page and in OpenMW. The + / − buttons are the profile actions `difficulty_up` / `difficulty_down`, so they can be remapped; the value is kept for the session (a profile's `ride.difficulty` is the starting value).
 
 ## What makes a game easy to connect
 

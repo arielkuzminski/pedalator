@@ -1,7 +1,8 @@
-"""OpenMW (Morrowind): the Lua mod in ``data/openmw/Pedalator`` reads ``pedalator/state.txt``; the gradient comes back
-through the game's log (the mod prints ``PEDALATOR grade=<percent>``).
+"""OpenMW (Morrowind): the Lua mod in ``data/openmw/Pedalator`` reads ``pedalator/state.txt`` and ``config.txt``; the
+gradient comes back through the game's log (the mod prints ``PEDALATOR grade=<percent>``).
 
-Pedalator's one key press here is "use" (open / take / talk): OpenMW has no Lua call for "use what I look at".
+What each Click button does, and the game's *use* key, come from the active profile (``profiles.py``). Pedalator's one
+key press here is "use" (open / take / talk): OpenMW has no Lua call for "use what I look at".
 """
 from __future__ import annotations
 
@@ -10,23 +11,27 @@ import re
 import time
 from pathlib import Path
 
-from .. import keys
+from .. import keys, profiles
 from ..state import clamp_grade, log, state, throttle_for
 
-# what each physical Zwift Click button does (right puck: Y top, Z left, A right, B bottom)
-BUTTONS = {"turn_left": "LEFT", "turn_right": "RIGHT", "look_up": "UP", "look_down": "DOWN",
-           "attack": "B", "jump": "A", "draw_weapon": "Y", "use": "Z"}
-
-USE_KEYS = {"e": 0x12, "f": 0x21, "space": 0x39, "enter": 0x1C}
 GRADE_LINE = re.compile(rb"PEDALATOR grade=(-?[0-9.]+)")
 
 
 def state_line(n: int, power: float, raw: set[str], floor: float = 15.0) -> str:
     """One line for the mod's player script. ``move`` is 0..1, ``turn`` +1 is right, ``look`` +1 is down."""
-    held = lambda action: 1 if BUTTONS[action] in raw else 0           # noqa: E731
+    def held(action: str) -> int:
+        return 1 if profiles.held("openmw", action, raw) else 0
+
     return (f"n={n};move={throttle_for(power, floor):.3f};turn={held('turn_right') - held('turn_left')};"
             f"look={held('look_down') - held('look_up')};atk={held('attack')};jump={held('jump')};"
             f"draw={held('draw_weapon')};power={int(power)};diff={round(state['difficulty'] * 100)}\n")
+
+
+def config_line(options: dict | None = None) -> str:
+    """The mod's tuning, from the active profile's options (the mod reads ``config.txt`` about once a second)."""
+    o = options if options is not None else profiles.current("openmw")["options"]
+    return (f"turn_rate={o['turn_rate']};pitch_rate={o['pitch_rate']};run_above={o['run_above']};"
+            f"speed_attr={1 if o['use_speed_attribute'] else 0};speed_boost={o['speed_boost']}\n")
 
 
 def parse_grades(chunk: bytes) -> list[float]:
@@ -51,13 +56,29 @@ async def state_loop(path: Path, floor: float = 15.0) -> None:
         await asyncio.sleep(0.05)
 
 
-async def use_key(key_name: str) -> None:
-    """Hold the game's use key while the Click's 'use' button is held."""
-    keys.SCAN["use"] = USE_KEYS[key_name]
+async def config_loop(path: Path) -> None:
+    """Keep the mod's ``config.txt`` equal to the active profile's options (written when they change)."""
+    written = None
+    while True:
+        line = config_line()
+        if line != written:
+            try:
+                with open(path, "w") as f:
+                    f.write(line)
+                written = line
+            except OSError as e:
+                log(f"cannot write {path}: {e} (an older install without config.txt? run: pedalator install openmw)")
+                written = line
+        await asyncio.sleep(0.5)
+
+
+async def use_key() -> None:
+    """Hold the game's *use* key (the profile's ``keys.use``) while the button bound to *use* is held."""
     down = False
     try:
         while True:
-            want = BUTTONS["use"] in state["raw"] and time.time() - state["t_buttons"] < 1.5
+            raw = state["raw"] if time.time() - state["t_buttons"] < 1.5 else ()
+            want = profiles.held("openmw", "use", raw)
             if want and not down:
                 keys.key("use", True)
                 down = True

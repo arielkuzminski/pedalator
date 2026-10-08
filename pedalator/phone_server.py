@@ -17,12 +17,13 @@ from urllib.parse import parse_qs, urlparse
 
 from .certs import ensure_certs, load_token
 from .ftms import on_bike_data, on_control_point
-from .keys import KEYMAP
 from .paths import WEB_DIR
 from .state import current_notice, effective_grade, log, state
 
 PHONE_PORT, CA_PORT = 8766, 8767
 
+# the driving actions the phone page decoded (kept for older pages; the PC works from the physical buttons)
+DRIVING_ACTIONS = {"left", "right", "brake"}
 # the physical Zwift Click buttons the phone may report
 RAW_BUTTONS = {"LEFT", "RIGHT", "UP", "DOWN", "A", "B", "Y", "Z", "PLUS", "MINUS"}
 
@@ -109,7 +110,7 @@ class PhoneHandler(BaseHTTPRequestHandler):
                 on_bike_data(None, bytearray.fromhex(body["hex"]))
                 state["connected"] = True
             elif path == "/phone/buttons":
-                state["buttons"] = [b for b in body.get("pressed", []) if b in KEYMAP]
+                state["buttons"] = [b for b in body.get("pressed", []) if b in DRIVING_ACTIONS]
                 state["raw"] = [b for b in body.get("raw", []) if b in RAW_BUTTONS]
                 state["t_buttons"] = time.time()
             elif path == "/phone/status":

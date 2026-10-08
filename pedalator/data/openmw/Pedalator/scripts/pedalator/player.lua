@@ -25,14 +25,15 @@ local Player = types.Player
 local STATE_FILE = 'pedalator/state.txt'
 local STALE_AFTER = 1.0        -- s without a new counter value: the bridge is gone, give the controls back
 local READ_EVERY = 0.04        -- s between reads of the state file
-local TURN_RATE = 1.7          -- rad/s at full lock (about 100 degrees a second)
-local PITCH_RATE = 1.2         -- rad/s looking up / down
-local RUN_ABOVE = 0.55         -- move above this runs, below it walks
+local CONFIG_FILE = 'pedalator/config.txt'
+local CONFIG_EVERY = 1.0       -- s between reads of the tuning file
 local MIN_MOVE = 0.05          -- below this the character stands
--- Morrowind's walking speed depends on the Speed attribute. If the analog movement value turns out not to
--- scale the speed, set this to true: the script then adds up to SPEED_BOOST to Speed in proportion to move.
-local USE_SPEED_ATTRIBUTE = false
-local SPEED_BOOST = 60
+-- The tuning below comes from the active profile (Pedalator writes it to config.txt and the dashboard edits it);
+-- these are only the values used until the file has been read.
+--   turn_rate / pitch_rate : rad/s turning and looking
+--   run_above              : "gas" (0..1) above which the character runs instead of walking
+--   speed_attr, speed_boost: raise the Speed attribute with power (if analog movement is not enough for you)
+local CFG = { turn_rate = 1.7, pitch_rate = 1.2, run_above = 0.55, speed_attr = 0, speed_boost = 60 }
 local GRADE_EVERY = 0.25       -- s between "PEDALATOR grade=" lines
 local GRADE_MIN_DIST = 100     -- game units (~1.4 m) travelled before a new gradient sample
 local GRADE_SMOOTH = 0.3
@@ -42,7 +43,7 @@ local DEBUG = false            -- also print what was read (every 2 s)
 local st = { n = -1, move = 0, turn = 0, look = 0, atk = 0, jump = 0, draw = 0, power = 0, diff = nil }
 local shownDiff = nil
 local lastN, lastChange = nil, 0
-local sinceRead, sinceGrade, sinceDebug = 0, 0, 0
+local sinceRead, sinceGrade, sinceDebug, sinceConfig = 0, 0, 0, CONFIG_EVERY
 local movementOverridden, combatOverridden = false, false
 local appliedSpeed = 0
 local gx, gy, gz, grade = nil, nil, nil, 0.0
@@ -51,7 +52,7 @@ local lastDraw, lastAtk = 0, 0
 
 local function parse(txt)
     local t = {}
-    for k, v in string.gmatch(txt, '(%w+)=([%-%d%.eE]+)') do t[k] = tonumber(v) end
+    for k, v in string.gmatch(txt, '([%w_]+)=([%-%d%.eE]+)') do t[k] = tonumber(v) end
     return t
 end
 
@@ -72,6 +73,17 @@ local function readState()
         atk = t.atk or 0, jump = t.jump or 0, draw = t.draw or 0, power = t.power or 0, diff = t.diff,
     }
     return true
+end
+
+local function readConfig()
+    local f = vfs.open(CONFIG_FILE)
+    if not f then return end
+    local txt = f:read('*a')
+    f:close()
+    if not txt or txt == '' then return end
+    for k, v in pairs(parse(txt)) do
+        if CFG[k] ~= nil then CFG[k] = v end
+    end
 end
 
 local function setSpeedBoost(boost)
@@ -139,6 +151,11 @@ local function onFrame(dt)
 
     -- ---- the state file ----
     local now = core.getRealTime()
+    sinceConfig = sinceConfig + dt
+    if sinceConfig >= CONFIG_EVERY then
+        sinceConfig = 0
+        readConfig()
+    end
     sinceRead = sinceRead + dt
     if sinceRead >= READ_EVERY then
         sinceRead = 0
@@ -190,11 +207,12 @@ local function onFrame(dt)
     local move = st.move < MIN_MOVE and 0 or st.move
     self.controls.sideMovement = 0
     self.controls.movement = move
-    self.controls.run = move > RUN_ABOVE
+    self.controls.run = move > CFG.run_above
     self.controls.jump = st.jump ~= 0
-    self.controls.yawChange = st.turn * TURN_RATE * dt
-    self.controls.pitchChange = st.look * PITCH_RATE * dt
-    if USE_SPEED_ATTRIBUTE then setSpeedBoost(SPEED_BOOST * move) end
+    self.controls.yawChange = st.turn * CFG.turn_rate * dt
+    self.controls.pitchChange = st.look * CFG.pitch_rate * dt
+    if CFG.speed_attr ~= 0 then setSpeedBoost(CFG.speed_boost * move)
+    elseif appliedSpeed ~= 0 then setSpeedBoost(0) end
 
     -- ---- the weapon: one press draws or sheathes it ----
     if st.draw ~= 0 and lastDraw == 0 then toggleWeapon() end

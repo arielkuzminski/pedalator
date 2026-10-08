@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): profiles with remappable keys that you can import and export, and a wizard for adding a new game.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): a wizard for adding a new game.
 
 ## How it works
 
@@ -132,6 +132,7 @@ More in [Zwift Click](docs/zwift-click.md).
 | [Quick start](docs/quick-start.md) | first ride in a few minutes |
 | [Phone mode](docs/phone-mode.md) | iPhone, Android or a laptop as the Bluetooth radio; the one-time certificate step |
 | [OpenMW / Morrowind](docs/games/openmw.md) · [openOMSI](docs/games/openomsi.md) · [Keys and UDP](docs/games/keys-and-udp.md) | per-game setup |
+| [Profiles](docs/profiles.md) | remap buttons and keys, import and export a game's setup |
 | [Zwift Click](docs/zwift-click.md) | buttons, how the protocol works |
 | [Architecture](docs/architecture.md) | channels, ports, file formats |
 | [Troubleshooting](docs/troubleshooting.md) · [FAQ](docs/faq.md) | when something is wrong |

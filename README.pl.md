@@ -41,7 +41,7 @@
 
 Pedalator to **oprogramowanie w wersji alfa**: autorowi działa na co dzień, ale spodziewaj się zadziorów. Jeśli coś nie działa, otwórz zgłoszenie.
 
-**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): profile z konfigurowalnymi klawiszami do importu i eksportu, kreator dodawania nowej gry.
+**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): kreator dodawania nowej gry.
 
 ## Jak to działa
 

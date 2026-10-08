@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "omsi",
+  "name": "OMSI / openOMSI (numpad keys)",
+  "target": "keys",
+  "ride": {
+    "mode": "easy"
+  },
+  "bindings": {
+    "LEFT": "steer_left",
+    "Z": "steer_left",
+    "RIGHT": "steer_right",
+    "A": "steer_right",
+    "DOWN": "brake",
+    "B": "brake",
+    "MINUS": "difficulty_down",
+    "PLUS": "difficulty_up"
+  },
+  "keys": {
+    "throttle": "Numpad8",
+    "brake": "Numpad2",
+    "left": "Numpad4",
+    "right": "Numpad6"
+  },
+  "options": {}
+}

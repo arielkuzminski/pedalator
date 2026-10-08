@@ -4,7 +4,7 @@
 
 | What | Where | Protection |
 |---|---|---|
-| The dashboard | `127.0.0.1:8765` | this PC only |
+| The dashboard | `127.0.0.1:8765` | this PC only; it also rejects a foreign `Host` header (DNS rebinding) and any `POST` that is not `application/json`, so a web page you visit cannot change your keys or settings |
 | The phone page and API (only with `--remote`) | `0.0.0.0:8766` over HTTPS | a secret token in the URL, and your local network |
 | The certificate download (only with `--remote`) | `0.0.0.0:8767` over HTTP | it serves only the public certificate |
 | Game channels | UDP on `127.0.0.1` | this PC only |

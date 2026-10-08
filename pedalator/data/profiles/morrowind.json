@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "id": "morrowind",
+  "name": "Morrowind (OpenMW)",
+  "target": "openmw",
+  "ride": {
+    "mode": "easy"
+  },
+  "bindings": {
+    "LEFT": "turn_left",
+    "RIGHT": "turn_right",
+    "UP": "look_up",
+    "DOWN": "look_down",
+    "B": "attack",
+    "A": "jump",
+    "Y": "draw_weapon",
+    "Z": "use",
+    "MINUS": "difficulty_down",
+    "PLUS": "difficulty_up"
+  },
+  "keys": {
+    "use": "KeyE"
+  },
+  "options": {
+    "turn_rate": 1.7,
+    "pitch_rate": 1.2,
+    "run_above": 0.55,
+    "use_speed_attribute": false,
+    "speed_boost": 60
+  }
+}

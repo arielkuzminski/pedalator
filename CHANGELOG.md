@@ -5,6 +5,9 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- **Profiles:** one JSON file per game or setup holds the button map, the keys, the ride defaults and game options. A new **Controls** tab in the dashboard remaps buttons and keys live and saves, exports and imports profiles; `--profile` and `pedalator profile list|show|export|import|delete` on the command line; the OpenMW mod reads its tuning from a config file. See [docs/profiles.md](docs/profiles.md).
+- The dashboard now refuses requests with a foreign `Host` header and non-JSON `POST`s, so another web page cannot drive it.
+
 - **Click + and − change the trainer's difficulty** (10 points of the game's hills per press, repeating while held), with feedback on the dashboard, the phone page and in OpenMW. On a Click v2 − and + no longer steer in the `keys` target.
 
 - **Zwift Click over the PC's own Bluetooth** (`pedalator/click.py`): with a BLE adapter, no phone is needed for the Click. Flag `--click auto|off`; the dashboard shows a *controls* light; trainer and Click scans never overlap. Not yet tested on a real controller through the PC.
@@ -12,7 +15,6 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Hybrid mode:** `--trainer pc|phone` and `--click pc|phone|off` choose who reads the trainer and the Click (`--remote` stays as the shorthand). The phone page hides what the PC reads itself, and the PC refuses data it does not want.
 
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
-- Profiles: import and export of a game's configuration, remappable keys in the dashboard.
 - A wizard for adding a new game.
 
 ## [0.1.0] — first public release

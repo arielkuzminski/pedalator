@@ -85,6 +85,50 @@ def install_openomsi(game_dir: Path) -> int:
     return 0
 
 
+def profile_command(args: argparse.Namespace) -> int:
+    from . import profiles
+    from .paths import user_data_dir
+    profiles.set_user_dir((args.data_dir or user_data_dir()) / "profiles")
+    if args.action == "list":
+        for p in profiles.list_profiles():
+            tag = "yours" if p["user"] else "built-in"
+            if p["user"] and p["builtin"]:
+                tag = "yours (replaces the built-in)"
+            print(f"{p['id']:<20} {p['target']:<7} {tag:<30} {p['name']}")
+        return 0
+    if args.action in ("show", "export"):
+        try:
+            text = profiles.export_text(profiles.load(args.id))
+        except (KeyError, ValueError) as e:
+            print(f"no usable profile '{args.id}': {e}")
+            return 2
+        if args.action == "export" and args.out:
+            args.out.write_text(text, encoding="utf-8")
+            print(f"written: {args.out}")
+        else:
+            print(text, end="")
+        return 0
+    if args.action == "import":
+        try:
+            text = args.file.read_text(encoding="utf-8")
+        except OSError as e:
+            print(f"cannot read {args.file}: {e}")
+            return 2
+        profile, errors = profiles.import_text(text, args.id, args.overwrite)
+        if errors:
+            print("not imported:")
+            for e in errors:
+                print(f"  - {e}")
+            return 2
+        print(f"imported '{profile['name']}' as {profile['id']} (target {profile['target']}); use it with --profile {profile['id']}")
+        return 0
+    if profiles.delete_user(args.id):
+        print(f"deleted {args.id}")
+        return 0
+    print(f"'{args.id}' is not one of your profiles (built-in profiles cannot be deleted)")
+    return 2
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="pedalator")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -104,7 +148,25 @@ def main(argv: list[str]) -> int:
     bb.add_argument("--out", type=Path, help="where to write the mod (default: <game-dir>/Mods/Pedalator)")
     bb.add_argument("--game-dir", type=Path, help="the openOMSI folder, to pick the default --out")
 
+    pf = sub.add_parser("profile", help="list, show, export, import or delete profiles")
+    pf.add_argument("--data-dir", type=Path, help="where your profiles are kept (default: the Pedalator data folder)")
+    pfs = pf.add_subparsers(dest="action", required=True)
+    pfs.add_parser("list", help="list the built-in profiles and yours")
+    for name, helptext in (("show", "print a profile as JSON"), ("export", "write a profile to a file (default: stdout)")):
+        p = pfs.add_parser(name, help=helptext)
+        p.add_argument("id")
+        if name == "export":
+            p.add_argument("--out", type=Path)
+    pi = pfs.add_parser("import", help="validate a profile file and save it as yours")
+    pi.add_argument("file", type=Path)
+    pi.add_argument("--id", help="save under this id instead of the file's")
+    pi.add_argument("--overwrite", action="store_true", help="replace one of yours with the same id")
+    pd = pfs.add_parser("delete", help="delete a profile you saved")
+    pd.add_argument("id")
+
     args = ap.parse_args(argv)
+    if args.cmd == "profile":
+        return profile_command(args)
     if args.cmd == "install":
         if args.game == "openmw":
             return install_openmw(args.user_dir, args.dest, args.dry_run)

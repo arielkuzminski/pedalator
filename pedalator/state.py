@@ -22,6 +22,8 @@ state: dict = {
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",
+    "target": "keys",                # which game target runs: keys | openmw | udp
+    "profile": None, "profile_id": None,   # the active profile (see profiles.py)
     "notice": "", "t_notice": 0.0,   # a short message for the rider, e.g. "difficulty:60" (shown for 3 s)
 }
 
@@ -84,6 +86,7 @@ def snapshot() -> dict:
     s["age_udp"] = round(now - s["t_udp"], 1) if s["t_udp"] else None
     s["age_cp"] = round(now - s["t_cp"], 1) if s["t_cp"] else None
     s["notice"] = current_notice()
+    s["profile"] = None                    # (the Controls page asks /profile for it)
     for k in ("t_packet", "t_udp", "t_cp", "t_notice"):
         s.pop(k)
     s["history"] = list(history)

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import time
 
+from . import profiles
 from .state import log, set_notice, state
 
 STEP = 0.1              # share of the game's hills, per press
@@ -28,13 +29,13 @@ def apply_step(direction: int) -> None:
 
 
 async def difficulty_loop() -> None:
-    """Watch the physical PLUS / MINUS buttons (every game target reports them in ``state['raw']``)."""
-    due: dict[str, float | None] = {"PLUS": None, "MINUS": None}
+    """Watch the buttons the active profile binds to ``difficulty_up`` / ``difficulty_down`` (+ and − by default)."""
+    due: dict[str, float | None] = {"difficulty_up": None, "difficulty_down": None}
     while True:
         now = time.time()
         raw = set(state["raw"]) if now - state["t_buttons"] < 1.5 else set()
-        for name, direction in (("PLUS", 1), ("MINUS", -1)):
-            if name not in raw:
+        for name, direction in (("difficulty_up", 1), ("difficulty_down", -1)):
+            if not profiles.held(state["target"], name, raw):
                 due[name] = None
             elif due[name] is None or now >= due[name]:
                 first = due[name] is None

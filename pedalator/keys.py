@@ -1,4 +1,7 @@
-"""Keyboard output: the 'keys' target presses the game's driving keys (Windows SendInput, hardware scan codes)."""
+"""Keyboard output: the 'keys' target presses the game's driving keys (Windows SendInput, hardware scan codes).
+
+Which keys, and which Zwift Click buttons mean what, comes from the active profile (``profiles.py``).
+"""
 from __future__ import annotations
 
 import asyncio
@@ -6,18 +9,23 @@ import ctypes
 import sys
 import time
 
+from . import keynames
 from .state import log, state, throttle_for
 
-# Scan codes. numpad = OMSI's own layout (Inputs/keyboard.cfg: 8 throttle, 2 brake, 4/6 steering).
-# In a bus W is the wipers, so numpad is the default; wasd suits games that use it.
-KEYSETS = {
-    "numpad": {"throttle": 0x48, "brake": 0x50, "left": 0x4B, "right": 0x4D},
-    "wasd": {"throttle": 0x11, "brake": 0x1F, "left": 0x1E, "right": 0x20},
+# slot -> (scan code, extended). Filled from the profile; these are OMSI's own keys until one is applied.
+BINDINGS: dict[str, tuple[int, bool]] = {
+    "throttle": keynames.scan("Numpad8"), "brake": keynames.scan("Numpad2"),
+    "left": keynames.scan("Numpad4"), "right": keynames.scan("Numpad6"), "use": keynames.scan("KeyE"),
 }
-SCAN = dict(KEYSETS["numpad"])
 
-# Zwift Click action (decoded by the phone page) -> the key name in SCAN that it holds
-KEYMAP = {"left": "left", "right": "right", "brake": "brake"}
+# what the keys target holds for each driving action of a profile
+ACTION_SLOT = {"steer_left": "left", "steer_right": "right", "brake": "brake"}
+
+
+def apply_keys(keymap: dict[str, str]) -> None:
+    """Use these keys (slot -> key name) from now on."""
+    for slot, name in keymap.items():
+        BINDINGS[slot] = keynames.scan(name)
 
 
 class _KI(ctypes.Structure):
@@ -35,21 +43,22 @@ class _IN(ctypes.Structure):
 _warned = False
 
 
-def key(name: str, down: bool) -> None:
-    """Press or release the key called ``name`` in SCAN. Only Windows can inject keys for now."""
+def key(slot: str, down: bool) -> None:
+    """Press or release the key in ``slot``. Only Windows can inject keys for now."""
     global _warned
     if sys.platform != "win32":
         if not _warned:
             _warned = True
             log("key output works on Windows only (see docs/roadmap.md for Linux/macOS)")
         return
-    flags = 0x0008 | (0 if down else 0x0002)       # KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP
-    i = _IN(type=1, ki=_KI(0, SCAN[name], flags, 0, None))
+    scan, extended = BINDINGS[slot]
+    flags = 0x0008 | (0x0001 if extended else 0) | (0 if down else 0x0002)   # SCANCODE | EXTENDEDKEY | KEYUP
+    i = _IN(type=1, ki=_KI(0, scan, flags, 0, None))
     ctypes.windll.user32.SendInput(1, ctypes.byref(i), ctypes.sizeof(_IN))
 
 
 async def throttle_loop(floor: float = 15.0) -> None:
-    """~20 Hz PWM of the throttle key: the share of time it is held is the rider's 'gas'."""
+    """~20 Hz PWM of the throttle key: the share of time it is down is the rider's 'gas'."""
     period = 0.05
     try:
         while True:
@@ -64,20 +73,27 @@ async def throttle_loop(floor: float = 15.0) -> None:
         key("throttle", False)
 
 
+def wanted_slots(raw) -> set[str]:
+    """The key slots the held Click buttons ask for, by the active profile's bindings."""
+    from . import profiles
+    return {slot for action, slot in ACTION_SLOT.items() if profiles.held("keys", action, raw)}
+
+
 async def buttons_loop() -> None:
-    """Holds steering and brake while the phone reports the matching Zwift Click buttons (released if it goes quiet)."""
+    """Holds steering and brake while the matching Zwift Click buttons are held (let go if it goes quiet)."""
     down: set[str] = set()
     try:
         while True:
-            want = set(state["buttons"]) if time.time() - state["t_buttons"] < 1.5 else set()
-            for name, k in KEYMAP.items():
-                if name in want and name not in down:
-                    key(k, True)
-                    down.add(name)
-                elif name not in want and name in down:
-                    key(k, False)
-                    down.discard(name)
+            raw = state["raw"] if time.time() - state["t_buttons"] < 1.5 else ()
+            want = wanted_slots(raw)
+            for slot in ("left", "right", "brake"):
+                if slot in want and slot not in down:
+                    key(slot, True)
+                    down.add(slot)
+                elif slot not in want and slot in down:
+                    key(slot, False)
+                    down.discard(slot)
             await asyncio.sleep(0.03)
     finally:
-        for name in down:
-            key(KEYMAP[name], False)
+        for slot in down:
+            key(slot, False)

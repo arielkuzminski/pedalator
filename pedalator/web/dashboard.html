@@ -88,6 +88,25 @@
   #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #2a3350; color: #fff; padding: 12px 22px;
            border-radius: 14px; font-size: 18px; font-weight: 700; border: 1px solid var(--accent); display: none; z-index: 8; }
   #toast.show { display: block; }
+  .tabs { display: flex; gap: 6px; margin: 0 0 16px; }
+  .tabs button { background: var(--panel); border: 1px solid var(--line); color: var(--dim); padding: 8px 18px; border-radius: 10px;
+                 font: inherit; font-weight: 700; cursor: pointer; }
+  .tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn { background: var(--panel2); border: 1px solid var(--line); color: var(--text); padding: 7px 14px; border-radius: 9px;
+         font: inherit; cursor: pointer; display: inline-block; }
+  .btn:hover { border-color: var(--accent); } .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  select, input[type=number], input[type=text] { background: #0e1424; border: 1px solid var(--line); color: var(--text); border-radius: 8px;
+         padding: 6px 8px; font: inherit; max-width: 100%; }
+  table.map { width: 100%; border-collapse: collapse; }
+  table.map td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.map tr.pressed td { background: #1d3a2b; }
+  table.map td:first-child { color: var(--dim); white-space: nowrap; }
+  .keycap { min-width: 120px; text-align: center; }
+  .keycap.capturing { border-color: var(--z4); color: var(--z4); }
+  #pf-msg { margin-top: 10px; font-size: 14px; } #pf-msg.err { color: #ff8a9a; } #pf-msg.ok { color: var(--ok); }
+  .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .c-wide { grid-column: span 12; } .c-half { grid-column: span 6; } @media (max-width: 900px) { .c-half { grid-column: span 12; } }
   #offline small { display: block; color: var(--dim); font-size: 14px; margin-top: 8px; }
 </style>
 </head>
@@ -105,6 +124,9 @@
     </div>
   </header>
 
+  <nav class="tabs"><button id="tab-ride" class="on" data-tab="ride">Ride</button><button id="tab-controls" data-tab="controls">Controls</button></nav>
+
+  <div id="view-ride">
   <div class="grid">
     <section class="card c-power">
       <h2>Power</h2>
@@ -193,12 +215,119 @@
       <details open><summary>Event log</summary><pre id="log">-</pre></details>
     </section>
   </div>
+  </div>
+
+  <div id="view-controls" style="display:none">
+  <div class="grid">
+    <section class="card c-wide">
+      <h2>Profile</h2>
+      <div class="row">
+        <div><select id="pf-select"></select> <span id="pf-dirty" style="color:var(--z4)"></span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn primary" id="pf-save">Save</button>
+          <button class="btn" id="pf-saveas">Save as…</button>
+          <button class="btn" id="pf-reset">Reset</button>
+          <button class="btn" id="pf-export">Export</button>
+          <label class="btn" for="pf-import">Import</label><input type="file" id="pf-import" accept=".json,application/json" hidden>
+          <button class="btn" id="pf-delete">Delete</button>
+        </div>
+      </div>
+      <div id="pf-saveas-row" class="row" style="display:none;margin-top:10px"><input type="text" id="pf-name" maxlength="60" placeholder="Name of the new profile" style="flex:1"><button class="btn primary" id="pf-name-ok">Save</button></div>
+      <div id="pf-msg"></div>
+      <div style="color:var(--dim);font-size:13px;margin-top:8px" id="pf-info"></div>
+    </section>
+
+    <section class="card c-half">
+      <h2>Zwift Click buttons</h2>
+      <table class="map" id="pf-buttons"></table>
+      <div style="color:var(--dim);font-size:12px;margin-top:8px">Press a button on your Click: its row lights up. Changes apply at once; use Save to keep them.</div>
+    </section>
+
+    <div class="c-half" style="display:grid;gap:14px;align-content:start">
+      <section class="card" id="pf-keys-card">
+        <h2>Keys pressed in the game</h2>
+        <table class="map" id="pf-keys"></table>
+        <div style="color:var(--dim);font-size:12px;margin-top:8px">Click a key, then press the key you want. Esc cancels.</div>
+      </section>
+      <section class="card" id="pf-options-card">
+        <h2>Tuning</h2>
+        <div id="pf-options"></div>
+      </section>
+      <section class="card">
+        <h2>Riding defaults of this profile</h2>
+        <div id="pf-ride"></div>
+        <div style="margin-top:10px"><button class="btn" id="pf-ride-now">Use the current values</button></div>
+      </section>
+    </div>
+  </div>
+  </div>
 </div>
 
 <script>
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'Ride': 'Jazda',
+  'Controls': 'Sterowanie',
+  'Profile': 'Profil',
+  'Save': 'Zapisz',
+  'Save as…': 'Zapisz jako…',
+  'Reset': 'Przywróć',
+  'Export': 'Eksportuj',
+  'Import': 'Importuj',
+  'Delete': 'Usuń',
+  'Zwift Click buttons': 'Przyciski Zwift Click',
+  'Keys pressed in the game': 'Klawisze naciskane w grze',
+  'Tuning': 'Strojenie',
+  'Riding defaults of this profile': 'Domyślna jazda tego profilu',
+  'Use the current values': 'Użyj bieżących wartości',
+  'Press a button on your Click: its row lights up. Changes apply at once; use Save to keep them.': 'Naciśnij przycisk na Clicku: jego wiersz się podświetli. Zmiany działają od razu; Zapisz je zachowa.',
+  'Click a key, then press the key you want. Esc cancels.': 'Kliknij klawisz, potem naciśnij żądany. Esc anuluje.',
+  'unsaved changes': 'niezapisane zmiany',
+  'press a key…': 'naciśnij klawisz…',
+  '— nothing —': '— nic —',
+  'Target: {0}. Profiles saved by you are marked ★ and win over the built-in one with the same name.': 'Cel: {0}. Profile zapisane przez Ciebie mają ★ i wygrywają z wbudowanym o tej samej nazwie.',
+  'Saved.': 'Zapisano.',
+  'Saved as “{0}”.': 'Zapisano jako „{0}”.',
+  'Imported and in use.': 'Zaimportowano i używany.',
+  'That key cannot be used: {0}': 'Tego klawisza nie można użyć: {0}',
+  'Delete the profile you saved: {0}?': 'Usunąć zapisany przez Ciebie profil: {0}?',
+  'A profile with that id already exists. Replace it?': 'Profil o tym id już istnieje. Zastąpić go?',
+  'Name of the new profile': 'Nazwa nowego profilu',
+  'Left puck: ▲': 'Lewy krążek: ▲',
+  'Left puck: ▼': 'Lewy krążek: ▼',
+  'Left puck: ◀': 'Lewy krążek: ◀',
+  'Left puck: ▶': 'Lewy krążek: ▶',
+  'Left puck: −': 'Lewy krążek: −',
+  'Right puck: Y (top)': 'Prawy krążek: Y (góra)',
+  'Right puck: B (bottom)': 'Prawy krążek: B (dół)',
+  'Right puck: Z (left)': 'Prawy krążek: Z (lewo)',
+  'Right puck: A (right)': 'Prawy krążek: A (prawo)',
+  'Right puck: +': 'Prawy krążek: +',
+  'Steer left': 'Skręć w lewo',
+  'Steer right': 'Skręć w prawo',
+  'Brake': 'Hamulec',
+  'Turn left': 'Obrót w lewo',
+  'Turn right': 'Obrót w prawo',
+  'Look up': 'Patrz w górę',
+  'Look down': 'Patrz w dół',
+  'Attack': 'Atak',
+  'Jump': 'Skok',
+  'Draw / sheathe weapon': 'Wyciągnij / schowaj broń',
+  'Use / open / take / talk': 'Użyj / otwórz / weź / rozmawiaj',
+  'Easier hills (−)': 'Łatwiejsze górki (−)',
+  'Harder hills (+)': 'Trudniejsze górki (+)',
+  'Throttle (pedalling)': 'Gaz (pedałowanie)',
+  'Use / open / take': 'Użyj / otwórz / weź',
+  'Turning speed': 'Szybkość obrotu',
+  'Looking up/down speed': 'Szybkość patrzenia góra/dół',
+  'Run above this gas (0–1)': 'Biegnij powyżej tego gazu (0–1)',
+  'Raise the Speed attribute with power': 'Podnoś atrybut Speed wraz z mocą',
+  'Speed attribute boost': 'Przyrost atrybutu Speed',
+  'Power gain': 'Wzmocnienie mocy',
+  'Share of the hills (0–1)': 'Część górek (0–1)',
+  'Full throttle at (W, gain ×1)': 'Pełny gaz przy (W, wzm. ×1)',
+  'FTP (W)': 'FTP (W)',
   'controls: …': 'kontrolki: …', 'controls: none': 'kontrolki: brak', 'controls: {0}': 'kontrolki: {0}',
   'Hills felt: {0} %': 'Odczuwane górki: {0} %',
   'Lost connection to Pedalator': 'Brak połączenia z Pedalatorem',
@@ -400,6 +529,7 @@ function onState() {
   const lg = $('log'), atEnd = lg.scrollTop + lg.clientHeight >= lg.scrollHeight - 8;
   lg.textContent = s.log.join('\n') || '-'; if (atEnd) lg.scrollTop = lg.scrollHeight;
   showMode(s);
+  if ($('view-controls').style.display !== 'none') markPressed(s.raw || []);
   const [nk, nv] = (s.notice || '').split(':');
   $('toast').textContent = nk === 'difficulty' ? t('Hills felt: {0} %', nv) : '';
   $('toast').classList.toggle('show', nk === 'difficulty');
@@ -418,7 +548,7 @@ function showMode(s) {
   $('modeinfo').textContent = t('full throttle from about {0} W', Math.round(s.pmax / s.gain));
 }
 // ---- controls ----
-const post = (u, b) => fetch(u, { method: 'POST', body: JSON.stringify(b) }).catch(() => {});
+const post = (u, b) => fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).catch(() => {});
 $('m-game').onclick = () => post('/mode', { mode: 'game' });
 $('m-man').onclick = () => post('/mode', { mode: 'manual' });
 $('gslider').oninput = e => { post('/mode', { mode: 'manual' }); post('/grade', { grade: +e.target.value }); };
@@ -431,6 +561,148 @@ function connect() {
   es.onerror = () => { es.close(); $('offline').classList.add('show'); setTimeout(connect, 1500); };
 }
 setInterval(() => { if (lastMsg && performance.now() - lastMsg > 3000) $('offline').classList.add('show'); }, 1000);
+
+// ---- tabs ----
+function showTab(name) {
+  $('view-ride').style.display = name === 'ride' ? '' : 'none';
+  $('view-controls').style.display = name === 'controls' ? '' : 'none';
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  if (name === 'controls') { loadProfile(); history.replaceState(null, '', '#controls'); } else history.replaceState(null, '', location.pathname + location.search);
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+// ---- Controls: profiles, Click buttons, keys, tuning ----
+let PF = null, pfEdit = null, capturing = null, pfBusy = false;
+const api = async (path, body) => {
+  const r = await fetch(path, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let data = {}; try { data = await r.json(); } catch (e) {}
+  return { ok: r.ok, data };
+};
+function pfMsg(text, kind) { $('pf-msg').textContent = text || ''; $('pf-msg').className = kind || ''; }
+function pfErrors(list) { pfMsg((list || []).map(e => '• ' + e).join('\n'), 'err'); $('pf-msg').style.whiteSpace = 'pre-line'; }
+
+async function loadProfile(keepEdit) {
+  const r = await api('/profile'); if (!r.ok) return;
+  PF = r.data; if (!keepEdit) pfEdit = JSON.parse(JSON.stringify(PF.profile));
+  const list = (await api('/profiles')).data.profiles || [];
+  const sel = $('pf-select'); sel.innerHTML = '';
+  for (const p of list.filter(p => p.target === PF.target)) {
+    const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + (p.user ? ' ★' : '');
+    if (p.id === PF.profile.id) o.selected = true; sel.appendChild(o);
+  }
+  renderControls();
+}
+function renderControls() {
+  if (!PF) return;
+  $('pf-dirty').textContent = PF.dirty ? t('unsaved changes') : '';
+  $('pf-delete').disabled = !PF.saved_by_you;
+  $('pf-info').textContent = t('Target: {0}. Profiles saved by you are marked ★ and win over the built-in one with the same name.', PF.target);
+  // buttons
+  const bt = $('pf-buttons'); bt.innerHTML = '';
+  for (const b of PF.buttons) {
+    const tr = document.createElement('tr'); tr.dataset.button = b.name;
+    const td1 = document.createElement('td'); td1.textContent = t(b.label); tr.appendChild(td1);
+    const td2 = document.createElement('td'); const sel = document.createElement('select');
+    sel.add(new Option(t('— nothing —'), ''));
+    for (const a of PF.actions) sel.add(new Option(t(a.label), a.name));
+    sel.value = pfEdit.bindings[b.name] || '';
+    sel.onchange = () => { if (sel.value) pfEdit.bindings[b.name] = sel.value; else delete pfEdit.bindings[b.name]; applyEdit(); };
+    td2.appendChild(sel); tr.appendChild(td2); bt.appendChild(tr);
+  }
+  // keys
+  $('pf-keys-card').style.display = PF.key_slots.length ? '' : 'none';
+  const kt = $('pf-keys'); kt.innerHTML = '';
+  for (const k of PF.key_slots) {
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td'); td1.textContent = t(k.label); tr.appendChild(td1);
+    const td2 = document.createElement('td'); const btn = document.createElement('button');
+    btn.className = 'btn keycap' + (capturing === k.name ? ' capturing' : '');
+    btn.textContent = capturing === k.name ? t('press a key…') : (PF.key_labels[pfEdit.keys[k.name]] || pfEdit.keys[k.name] || '—');
+    btn.onclick = () => { capturing = capturing === k.name ? null : k.name; renderControls(); };
+    td2.appendChild(btn); tr.appendChild(td2); kt.appendChild(tr);
+  }
+  // options
+  const names = Object.keys(PF.options);
+  $('pf-options-card').style.display = names.length ? '' : 'none';
+  const ot = $('pf-options'); ot.innerHTML = '';
+  for (const n of names) {
+    const spec = PF.options[n], row = document.createElement('div'); row.className = 'opt';
+    const lab = document.createElement('span'); lab.textContent = t(OPTION_LABELS[n] || n); row.appendChild(lab);
+    const inp = document.createElement('input');
+    if (spec.type === 'bool') { inp.type = 'checkbox'; inp.checked = !!pfEdit.options[n]; inp.onchange = () => { pfEdit.options[n] = inp.checked; applyEdit(); }; }
+    else { inp.type = 'number'; inp.min = spec.min; inp.max = spec.max; inp.step = (spec.max - spec.min) > 20 ? 1 : 0.05; inp.value = pfEdit.options[n]; inp.style.width = '90px';
+           inp.onchange = () => { pfEdit.options[n] = parseFloat(inp.value); applyEdit(); }; }
+    row.appendChild(inp); ot.appendChild(row);
+  }
+  // ride defaults
+  const rd = $('pf-ride'); rd.innerHTML = '';
+  const mrow = document.createElement('div'); mrow.className = 'opt'; mrow.innerHTML = '<span></span>'; mrow.firstChild.textContent = t('Riding mode');
+  const msel = document.createElement('select'); msel.add(new Option('—', ''));
+  for (const m of PF.modes) msel.add(new Option(t(MODE_LABELS[m] || m), m));
+  msel.value = pfEdit.ride.mode || ''; msel.onchange = () => { if (msel.value) pfEdit.ride.mode = msel.value; else delete pfEdit.ride.mode; applyEdit(); };
+  mrow.appendChild(msel); rd.appendChild(mrow);
+  for (const [f, lim] of Object.entries(PF.ride_fields)) {
+    const row = document.createElement('div'); row.className = 'opt'; const lab = document.createElement('span'); lab.textContent = t(RIDE_LABELS[f] || f); row.appendChild(lab);
+    const inp = document.createElement('input'); inp.type = 'number'; inp.min = lim.min; inp.max = lim.max; inp.step = lim.max > 100 ? 1 : 0.05; inp.placeholder = '—'; inp.style.width = '90px';
+    inp.value = pfEdit.ride[f] === undefined ? '' : pfEdit.ride[f];
+    inp.onchange = () => { if (inp.value === '') delete pfEdit.ride[f]; else pfEdit.ride[f] = parseFloat(inp.value); applyEdit(); };
+    row.appendChild(inp); rd.appendChild(row);
+  }
+}
+const OPTION_LABELS = { turn_rate: 'Turning speed', pitch_rate: 'Looking up/down speed', run_above: 'Run above this gas (0–1)', use_speed_attribute: 'Raise the Speed attribute with power', speed_boost: 'Speed attribute boost' };
+const MODE_LABELS = { easy: 'Easy', medium: 'Medium', real: 'Realistic' };
+const RIDE_LABELS = { gain: 'Power gain', difficulty: 'Share of the hills (0–1)', pmax: 'Full throttle at (W, gain ×1)', ftp: 'FTP (W)' };
+
+async function applyEdit() {                       // every change lands in the running program at once
+  if (pfBusy) return; pfBusy = true;
+  const r = await api('/profile/apply', { profile: pfEdit });
+  pfBusy = false;
+  if (!r.ok) { pfErrors(r.data.errors || [r.data.error]); return; }
+  pfMsg('');
+  await loadProfile(true);
+}
+document.addEventListener('keydown', e => {
+  if (!capturing) return;
+  e.preventDefault();
+  if (e.code === 'Escape') { capturing = null; renderControls(); return; }
+  if (!PF.key_labels[e.code]) { pfMsg(t('That key cannot be used: {0}', e.code), 'err'); capturing = null; renderControls(); return; }
+  pfEdit.keys[capturing] = e.code; capturing = null; applyEdit();
+});
+$('pf-select').onchange = async () => {
+  const r = await api('/profile/select', { id: $('pf-select').value });
+  if (!r.ok) pfErrors(r.data.errors); else pfMsg(''); await loadProfile();
+};
+$('pf-save').onclick = async () => { const r = await api('/profile/save', {}); if (r.ok) { pfMsg(t('Saved.'), 'ok'); await loadProfile(true); } else pfErrors(r.data.errors); };
+$('pf-saveas').onclick = () => { $('pf-saveas-row').style.display = ''; $('pf-name').focus(); };
+$('pf-name-ok').onclick = async () => {
+  const name = $('pf-name').value.trim(); if (!name) return;
+  const r = await api('/profile/save', { name });
+  if (r.ok) { $('pf-saveas-row').style.display = 'none'; $('pf-name').value = ''; pfMsg(t('Saved as “{0}”.', name), 'ok'); await loadProfile(); } else pfErrors(r.data.errors);
+};
+$('pf-reset').onclick = async () => { await api('/profile/select', { id: PF.profile.id }); pfMsg(''); await loadProfile(); };
+$('pf-export').onclick = () => { location.href = '/profile/export'; };
+$('pf-delete').onclick = async () => {
+  if (!confirm(t('Delete the profile you saved: {0}?', PF.profile.name))) return;
+  const r = await api('/profile/delete', { id: PF.profile.id }); if (!r.ok) pfErrors(r.data.errors); await loadProfile();
+};
+$('pf-import').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  const text = await file.text();
+  let r = await api('/profile/import', { text });
+  if (!r.ok && (r.data.errors || []).some(m => m.includes('already exists')) && confirm(t('A profile with that id already exists. Replace it?'))) r = await api('/profile/import', { text, overwrite: true });
+  if (!r.ok) { pfErrors(r.data.errors); return; }
+  const sel = await api('/profile/select', { id: r.data.id });
+  if (!sel.ok) { pfErrors(sel.data.errors); return; }
+  pfMsg(t('Imported and in use.'), 'ok'); await loadProfile();
+};
+$('pf-ride-now').onclick = () => {
+  pfEdit.ride = { gain: +S.gain.toFixed(2), difficulty: +S.difficulty.toFixed(2), pmax: S.pmax, ftp: S.ftp }; applyEdit();
+};
+function markPressed(raw) {                         // the Click buttons held right now light up their rows
+  document.querySelectorAll('#pf-buttons tr').forEach(tr => tr.classList.toggle('pressed', raw.includes(tr.dataset.button)));
+}
+if (location.hash === '#controls') showTab('controls');
+
 translateDom();
 connect(); frame();
 </script>

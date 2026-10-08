@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "id": "generic-udp",
+  "name": "Any game: UDP (JSON)",
+  "target": "udp",
+  "ride": {
+    "mode": "easy"
+  },
+  "bindings": {
+    "MINUS": "difficulty_down",
+    "PLUS": "difficulty_up"
+  },
+  "keys": {},
+  "options": {}
+}

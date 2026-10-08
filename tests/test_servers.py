@@ -126,7 +126,7 @@ def test_dashboard_controls_change_the_riding_mode(tmp_path):
         c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
 
         def send(path, body):
-            c.request("POST", path, body=json.dumps(body))
+            c.request("POST", path, body=json.dumps(body), headers={"Content-Type": "application/json"})
             r = c.getresponse()
             r.read()
             return r.status

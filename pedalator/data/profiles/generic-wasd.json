@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "generic-wasd",
+  "name": "Any game: W A S D",
+  "target": "keys",
+  "ride": {
+    "mode": "easy"
+  },
+  "bindings": {
+    "LEFT": "steer_left",
+    "Z": "steer_left",
+    "RIGHT": "steer_right",
+    "A": "steer_right",
+    "DOWN": "brake",
+    "B": "brake",
+    "MINUS": "difficulty_down",
+    "PLUS": "difficulty_up"
+  },
+  "keys": {
+    "throttle": "KeyW",
+    "brake": "KeyS",
+    "left": "KeyA",
+    "right": "KeyD"
+  },
+  "options": {}
+}
