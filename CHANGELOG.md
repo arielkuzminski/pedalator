@@ -5,6 +5,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- **Bluetooth signal strength:** the header shows the dBm the trainer and the Click had when the PC found them (red dot when weak), and the Start page has **Check signal strength**, a short scan for placing the adapter before a ride. Windows gives no signal reading for a connected device, so the header shows the value from the last discovery, not a live one.
 - **Start page (launcher):** `pedalator` with no game or rider now opens only the dashboard. Choose a game, pick the trainer (simulated, this PC's Bluetooth, phone) and the Click, press **Start riding**; **Stop** releases the trainer, the Click, the game's port and the phone servers so another game can be started without restarting. Giving a game or a rider on the command line still starts riding at once; `--launcher` forces the Start page. New `pedalator/session.py`; `--target` no longer defaults to `keys` (a profile alone now brings its own target).
   The Start page explains what to do for each game (numbered steps) and can add the OpenMW mod for you with one button, showing first what will change in `openmw.cfg` (a backup is made).
 - **Game tab in the dashboard:** the new-game wizard as a form, a live test panel (gas, turning, Click buttons, the UDP packet, a key tester) and an editor for the generated files. See [docs/new-game.md](docs/new-game.md).

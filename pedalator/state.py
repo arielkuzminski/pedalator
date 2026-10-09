@@ -19,6 +19,7 @@ state: dict = {
     "game_speed": 0.0, "pmax": 250, "keys": False, "keyset": "numpad",
     "buttons": [], "raw": [], "t_buttons": 0.0,
     "click_connected": False, "click_name": "-",   # the Zwift Click: read by the PC or by the phone page
+    "trainer_rssi": None, "click_rssi": None,      # signal strength (dBm) when the PC last found each over Bluetooth
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",
@@ -44,7 +45,8 @@ def reset_session() -> None:
     state.update(power=0, cadence=0.0, speed=0.0, distance=0, resistance=None, hr=None, grade=0.0, game_grade=0.0,
                  manual_grade=0.0, mode="game", connected=False, trainer_name="-", simulate=False,
                  t_packet=0.0, t_udp=0.0, t_cp=0.0, raw_hex="", cp_last="-", game_speed=0.0,
-                 buttons=[], raw=[], t_buttons=0.0, click_connected=False, click_name="-", notice="", t_notice=0.0)
+                 buttons=[], raw=[], t_buttons=0.0, click_connected=False, click_name="-", notice="", t_notice=0.0,
+                 trainer_rssi=None, click_rssi=None)
     history.clear()
     stats.update(sum=0.0, n=0, max=0)
 

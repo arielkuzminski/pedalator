@@ -42,7 +42,8 @@ async def find_trainer(address: str | None):
         log(f"  found {addr} {dev.name}")
     if not devs:
         return None, None
-    addr, (dev, _) = next(iter(devs.items()))
+    addr, (dev, adv) = next(iter(devs.items()))
+    state["trainer_rssi"] = adv.rssi
     return addr, dev.name or addr
 
 

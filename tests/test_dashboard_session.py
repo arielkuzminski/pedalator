@@ -144,3 +144,17 @@ def test_installing_without_openmw_says_what_is_missing(dash, tmp_path, monkeypa
 def test_installing_is_refused_while_riding(dash):
     dash.post("/session/start", {"profile": "generic-udp", "trainer": "simulate"})
     assert dash.post("/install/openmw", {})[0] == 400
+
+
+def test_the_signal_check_scans_when_idle_and_is_refused_during_a_ride(dash, monkeypatch):
+    from pedalator import click
+
+    async def fake_range(timeout=6.0):
+        return {"trainer": {"name": "KICKR", "rssi": -61}, "click": None}
+    monkeypatch.setattr(click, "check_range", fake_range)
+    assert dash.get("/session/signal") == (200, {"trainer": {"name": "KICKR", "rssi": -61}, "click": None})
+    state["session"] = {"status": "running"}
+    try:
+        assert dash.get("/session/signal")[0] == 409
+    finally:
+        state["session"] = {"status": "idle"}

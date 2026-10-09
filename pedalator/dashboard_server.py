@@ -116,6 +116,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._json(200, self._install_openmw(dry_run=True))
         elif self.route == "/session/options":
             self._json(200, self._session_options())
+        elif self.route == "/session/signal":              # a scan: how strong are the trainer and the Click here?
+            self._json(*self._signal())
         elif self.route == "/games":
             self._json(200, {"games": newgame.list_games()})
         elif self.route == "/games/file":
@@ -141,6 +143,17 @@ class DashboardHandler(BaseHTTPRequestHandler):
                            "cfg": str(openmw_user_dir() or "")},
                 "bluetooth": importlib.util.find_spec("bleak") is not None,
                 "defaults": {"udp_out": base.udp_out, "keys": base.keys}, "openmw_log": str(log_file or "")}
+
+    def _signal(self) -> tuple[int, dict]:
+        if self._session_active:
+            return 409, {"error": "stop the ride first: a scan would disturb the connections"}
+        if runtime.loop is None:
+            return 503, {"error": "the driver is not running in this process"}
+        from .click import check_range
+        try:
+            return 200, runtime.call(check_range(), timeout=20)
+        except Exception as e:                                  # no adapter, Bluetooth switched off...
+            return 200, {"trainer": None, "click": None, "error": f"{type(e).__name__}: {e}"}
 
     def _install_openmw(self, dry_run: bool) -> dict:
         """The same as ``pedalator install openmw`` (a backup of openmw.cfg is made); only the places it finds itself."""

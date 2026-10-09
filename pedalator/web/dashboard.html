@@ -260,6 +260,9 @@
         <div class="seg" id="st-click" role="group" aria-label="Zwift Click">
           <button data-v="auto">Automatic</button><button data-v="pc">This PC</button><button data-v="phone">Phone</button><button data-v="off">None</button></div>
         <div class="hint" id="st-click-hint"></div></div>
+      <div class="field" id="st-range-box"><div class="flabel">Bluetooth range</div>
+        <button class="btn" id="st-range">Check signal strength</button>
+        <div id="st-range-out" class="hint" aria-live="polite"></div></div>
       <div id="st-extra"></div>
     </section>
 
@@ -375,6 +378,15 @@
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'Bluetooth range': 'Zasięg Bluetooth',
+  'Check signal strength': 'Sprawdź siłę sygnału',
+  'Signal strong when found': 'Sygnał silny przy znalezieniu',
+  'Signal fair when found: a closer adapter would help': 'Sygnał średni przy znalezieniu: warto przybliżyć adapter',
+  'Signal weak when found: use a USB extension cable and put the adapter near the bike': 'Sygnał słaby przy znalezieniu: użyj przedłużki USB i postaw adapter blisko roweru',
+  'Scanning… (6 s) Press a button on the Click and pedal a little to wake the devices.': 'Skanowanie… (6 s) Wciśnij przycisk na Clicku i pokręć trochę korbą, żeby obudzić urządzenia.',
+  'The scan failed': 'Skan się nie udał',
+  'The scan failed: {0}': 'Skan się nie udał: {0}',
+  'not found (wake it up and try again)': 'nie znaleziono (obudź i spróbuj ponownie)',
   '✓ The Pedalator mod is installed in OpenMW: {0}': '✓ Mod Pedalatora jest zainstalowany w OpenMW: {0}',
   '✗ OpenMW\'s settings (openmw.cfg) were not found. Start OpenMW or its launcher once so that it creates them, then reload this page.': '✗ Nie znaleziono ustawień OpenMW (openmw.cfg). Uruchom raz OpenMW lub jego launcher, żeby je utworzył, i odśwież tę stronę.',
   'One-time setup: add the Pedalator mod to OpenMW': 'Jednorazowa konfiguracja: dodaj mod Pedalatora do OpenMW',
@@ -711,15 +723,18 @@ function onState() {
   const s = S, ok = s.connected;
   renderSessionChip();
   if (!tabChosen) { tabChosen = true; showTab(sess().status === 'idle' ? 'start' : 'ride'); }
-  $('d-ble').className = 'dot' + (ok ? ' on' : ''); $('t-ble').textContent = ok ? t('trainer: {0}', s.trainer_name) : t('trainer: none');
+  $('d-ble').className = 'dot' + (ok ? (sigLevel(s.trainer_rssi) === 'weak' ? ' warn' : ' on') : '');
+  $('t-ble').textContent = ok ? t('trainer: {0}', s.trainer_name) + sigText(s.trainer_rssi) : t('trainer: none');
+  $('t-ble').title = ok ? sigHint(s.trainer_rssi) : '';
   const gameOn = s.age_udp !== null && s.age_udp < 3;
   $('d-game').className = 'dot' + (gameOn ? ' on' : (s.age_udp !== null ? ' warn' : ''));
   $('t-game').textContent = gameOn ? t('game: connected') : (s.age_udp !== null ? t('game: silent {0} s', s.age_udp.toFixed(0)) : t('game: no signal'));
   const fresh = s.age_packet !== null && s.age_packet < 2;
   $('d-pkt').className = 'dot' + (fresh ? ' on' : (s.age_packet !== null ? ' warn' : ''));
   $('t-pkt').textContent = fresh ? t('data: flowing') : (s.age_packet !== null ? t('data: stalled {0} s', s.age_packet.toFixed(0)) : t('data: none'));
-  $('d-click').className = 'dot' + (s.click_connected ? ' on' : '');
-  $('t-click').textContent = s.click_connected ? t('controls: {0}', s.click_name) : t('controls: none');
+  $('d-click').className = 'dot' + (s.click_connected ? (sigLevel(s.click_rssi) === 'weak' ? ' warn' : ' on') : '');
+  $('t-click').textContent = s.click_connected ? t('controls: {0}', s.click_name) + sigText(s.click_rssi) : t('controls: none');
+  $('t-click').title = s.click_connected ? sigHint(s.click_rssi) : '';
   $('s-avg').textContent = s.avg_power; $('s-max').textContent = s.max_power;
   $('s-dist').textContent = (s.distance / 1000).toFixed(2) + ' km';
   const e = s.elapsed; $('s-time').textContent = String(Math.floor(e / 60)).padStart(2, '0') + ':' + String(e % 60).padStart(2, '0');
@@ -1008,6 +1023,10 @@ $('ed-save').onclick = async () => {
 };
 renderGameKeys();
 // ---- Start: choose a game, say how you ride, start and stop the session ----
+// Bluetooth signal strength (dBm, closer to 0 is stronger): shown when the PC found the device, not live
+const sigLevel = r => r == null ? null : (r >= -70 ? 'good' : (r >= -85 ? 'ok' : 'weak'));
+const sigText = r => r == null ? '' : ' · ' + r + ' dBm';
+const sigHint = r => r == null ? '' : t({ good: 'Signal strong when found', ok: 'Signal fair when found: a closer adapter would help', weak: 'Signal weak when found: use a USB extension cable and put the adapter near the bike' }[sigLevel(r)]);
 const TARGET_NAMES = { openmw: 'OpenMW', keys: 'Keyboard', udp: 'UDP' };
 const ST = { profile: null, trainer: null, click: 'auto', keys: true, udp_out: '' };
 try { Object.assign(ST, JSON.parse(localStorage.getItem('pedalator.start') || '{}')); } catch (e) {}
@@ -1100,6 +1119,7 @@ function renderStart() {
   const sl = $('st-steps'); sl.innerHTML = ''; sl.style.display = active ? 'none' : '';
   for (const [done, text] of (STEPS[tg] || [])) { const li = document.createElement('li'); li.textContent = (done ? '✓ ' : '') + t(text); li.className = done ? 'done' : ''; sl.appendChild(li); }
   $('st-why').textContent = active ? '' : (!prof ? t('Choose a game first.') : (tg === 'openmw' && !modOk ? t('Add the mod to OpenMW first (step 2).') : ''));
+  $('st-range').disabled = active;
   $('st-go').style.display = active ? 'none' : ''; $('st-stop').style.display = active ? '' : 'none';
   $('st-go').disabled = stBusy || blocked; $('st-go').textContent = stBusy ? t('Starting…') : t('Start riding');
   $('st-stop').disabled = se.status === 'stopping';
@@ -1123,6 +1143,20 @@ $('st-go').onclick = async () => {
 };
 const stopRide = async () => { const r = await api('/session/stop', {}); if (!r.ok) gmErrors('st-msg', r.data.errors || [r.data.error]); };
 $('st-stop').onclick = stopRide; $('sess-stop').onclick = stopRide;
+$('st-range').onclick = async () => {
+  const b = $('st-range'), out = $('st-range-out'); b.disabled = true; out.className = 'hint'; out.textContent = t('Scanning… (6 s) Press a button on the Click and pedal a little to wake the devices.');
+  const r = await api('/session/signal');
+  b.disabled = stActive();
+  if (!r.ok) { out.className = 'hint errc'; out.textContent = (r.data && r.data.error) || t('The scan failed'); return; }
+  out.textContent = '';
+  if (r.data.error) { out.className = 'hint errc'; out.textContent = t('The scan failed: {0}', r.data.error); return; }
+  for (const [k, label] of [['trainer', t('Trainer')], ['click', t('Zwift Click')]]) {
+    const d = r.data[k], line = document.createElement('div');
+    if (!d) { line.className = 'hint errc'; line.textContent = label + ': ' + t('not found (wake it up and try again)'); }
+    else { const lv = sigLevel(d.rssi); line.className = 'hint ' + (lv === 'weak' ? 'errc' : 'okc'); line.textContent = label + ': ' + d.name + sigText(d.rssi) + ' - ' + sigHint(d.rssi); }
+    out.appendChild(line);
+  }
+};
 $('st-new').onclick = () => { showTab('game'); $('gm-name').focus(); };
 $('st-edit').onclick = () => showTab('controls');
 $('st-import').onchange = async e => {
