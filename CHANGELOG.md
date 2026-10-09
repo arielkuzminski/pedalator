@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- **Newest toolchain:** Python **3.13 or newer** is required (3.13 and 3.14 are tested, 3.15 is tried and may fail), `bleak` 3, `cryptography` 50, pytest 9 and ruff 0.16, and CI runs on the newest GitHub actions with the current Node LTS (the JavaScript tests failed on Node 20).
+- A ride in a UDP game no longer leaves two UDP sockets open after it ends.
+
+### Added
+- **A single-file Windows program** (`pedalator-<version>-windows.exe`, built with PyInstaller by `.github/workflows/release.yml` and attached to each release, with a SHA-256 file). No Python needed. It is not code-signed, so Windows SmartScreen may warn on the first run. Build it yourself with `python tools/build_exe.py`.
+
 ## [0.2.0] — the launcher
 
 ### Changed

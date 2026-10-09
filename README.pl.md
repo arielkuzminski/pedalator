@@ -5,7 +5,7 @@
 **Pedałuj po grach.** Użyj inteligentnego trenażera jako kontrolera: Twoje pedałowanie porusza postać lub pojazd w grze, a wzniesienia w grze zwiększają opór trenażera.
 
 [![Licencja: MIT](https://img.shields.io/badge/licencja-MIT-blue.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue)
 ![Platforma: Windows](https://img.shields.io/badge/platforma-Windows-lightgrey)
 ![Status: alfa](https://img.shields.io/badge/status-alfa-orange)
 
@@ -62,7 +62,7 @@ flowchart LR
 
 ## Szybki start
 
-Potrzebujesz Pythona 3.10+ oraz, dla roweru w OMSI, dodatku HafenCity (zobacz [openOMSI](docs/games/openomsi.md)).
+Potrzebujesz Pythona 3.13+ oraz, dla roweru w OMSI, dodatku HafenCity (zobacz [openOMSI](docs/games/openomsi.md)).
 
 ```bash
 git clone https://github.com/arielkuzminski/pedalator

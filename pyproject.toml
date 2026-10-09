@@ -7,7 +7,7 @@ name = "pedalator"
 version = "0.2.0"
 description = "Ride games with your smart trainer: turns pedalling into game input and the game's hills into trainer resistance."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 license = { text = "MIT" }
 authors = [{ name = "Ariel Kuźmiński" }]
 keywords = ["smart trainer", "FTMS", "Bluetooth", "cycling", "OpenMW", "Morrowind", "OMSI", "Zwift Click", "game controller"]
@@ -18,16 +18,18 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: Microsoft :: Windows",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Games/Entertainment",
 ]
 dependencies = [
-  "bleak>=0.21",          # Bluetooth LE (direct connection from the PC)
-  "cryptography>=42",     # the private CA and certificate for phone mode (HTTPS)
+  "bleak>=3.0",           # Bluetooth LE (direct connection from the PC)
+  "cryptography>=50",     # the private CA and certificate for phone mode (HTTPS)
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6"]
-demo = ["pillow>=10"]       # tools/make_demo.py
+dev = ["pytest>=9", "ruff>=0.16"]
+demo = ["pillow>=12"]       # tools/make_demo.py
 
 [project.scripts]
 pedalator = "pedalator.cli:main"
@@ -47,7 +49,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]

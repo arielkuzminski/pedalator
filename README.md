@@ -5,7 +5,7 @@
 **Pedal through your games.** Use a smart trainer as a game controller: your pedalling moves the character or the vehicle, and the hills in the game push back through the trainer's resistance.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
@@ -62,7 +62,7 @@ The **bridge** (`python -m pedalator`, which opens a Start page where you choose
 
 ## Quick start
 
-You need Python 3.10+ and, for the bike in OMSI, the HafenCity add-on (see [openOMSI](docs/games/openomsi.md)).
+You need Python 3.13+ and, for the bike in OMSI, the HafenCity add-on (see [openOMSI](docs/games/openomsi.md)).
 
 ```bash
 git clone https://github.com/arielkuzminski/pedalator

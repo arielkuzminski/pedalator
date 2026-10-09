@@ -1,0 +1,51 @@
+name: Release build
+
+# Builds the single-file Windows program (PyInstaller) and attaches it to the GitHub release.
+# Runs when a release is published; run it by hand to (re)attach the program to an existing release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and attach to (for example v0.2.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e . pyinstaller
+      - name: Build
+        run: python tools/build_exe.py
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $exe = (Get-ChildItem build/dist/pedalator-*.exe).FullName
+          & $exe --version
+          $p = Start-Process -FilePath $exe -ArgumentList "--launcher","--dashboard-port","2199" -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 10
+          $r = Invoke-RestMethod -Uri http://127.0.0.1:2199/session
+          Stop-Process -Id $p.Id -Force
+          if ($r.session.status -ne "idle") { throw "the program did not start idle: $($r | ConvertTo-Json)" }
+      - name: Attach to the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Get-ChildItem build/dist/pedalator-*.exe, build/dist/SHA256SUMS.txt | ForEach-Object {
+            gh release upload $env:TAG $_.FullName --clobber
+          }
