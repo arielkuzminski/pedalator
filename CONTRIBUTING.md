@@ -13,7 +13,7 @@ Thank you for wanting to help! Pedalator is a small, friendly project and every 
 1. Fork, make a branch.
 2. Set up: see [Development](docs/development.md). All three checks must pass:
    ```bash
-   python -m ruff check . && python -m pytest -q && node --test "tests/js/*.test.js"
+   python -m ruff check . && python -m pytest -q && node --test
    ```
 3. Keep changes focused, add or update tests for logic you touch, update the docs for behaviour you change.
 4. Open a pull request and say what you tested **on real hardware** and what you could not.

@@ -1,7 +1,7 @@
 # Test scenarios
 
 Manual scenarios for what automated tests cannot reach: real Bluetooth, real games, a real browser.
-Automated checks first: `python -m ruff check .`, `python -m pytest -q`, `node --test "tests/js/*.test.js"`.
+Automated checks first: `python -m ruff check .`, `python -m pytest -q`, `node --test`.
 
 Mark each scenario **PASS / FAIL** with a note. Start with part A (no hardware), then B (hardware).
 Close any old `pedalator.exe` first: an old instance may still hold its port (8765 in older builds).

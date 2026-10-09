@@ -30,4 +30,4 @@ jobs:
       - name: Python tests
         run: python -m pytest -q
       - name: JavaScript tests
-        run: node --test "tests/js/*.test.js"
+        run: node --test

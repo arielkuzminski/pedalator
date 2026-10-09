@@ -1,5 +1,5 @@
 // Tests for the logic inside web/phone.html: the Zwift Click decoders and the request queue.
-// Run: node --test tests/js
+// Run: node --test
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
