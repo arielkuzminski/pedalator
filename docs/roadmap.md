@@ -154,7 +154,7 @@ Status: ✅ done · 💡 idea. "Effort" is a rough guess. APIs of these games ch
 - 💡 **`pedalator doctor`** command: checks Python, Bluetooth, ports, firewall, game installs (the Start page's signal check and the Flow check cover part of it).
 - ✅ **Start page and sessions:** choose a game and start or stop a ride from the dashboard, no restart needed.
 - 💡 **Config file** (TOML) and remembered settings.
-- 💡 **Windows installer / single-file exe** (PyInstaller), and a PyPI package.
+- ✅ **Single-file Windows program** (PyInstaller), attached to each release. 💡 Still open: an installer, code signing (SmartScreen warns about an unsigned program) and a PyPI package.
 - 💡 More dashboard languages (translations live in a small dictionary at the top of each page script).
 - 💡 More tests with a fake trainer (a recorded FTMS packet replay).
 

@@ -36,13 +36,13 @@ async def sampler() -> None:
 
 
 async def console_status() -> None:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    while True:
-        effective_grade()
-        print(f"grade {state['grade']:5.1f}%  P {state['power']:4d} W  cad {state['cadence']:5.1f}"
-              f"  v {state['speed']:5.1f} km/h", flush=True)
-        try:
-            sock.sendto(f"power={state['power']}".encode(), ("127.0.0.1", POWER_PORT))
-        except OSError:
-            pass
-        await asyncio.sleep(1.0)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:         # closed when the ride ends (the task is cancelled)
+        while True:
+            effective_grade()
+            print(f"grade {state['grade']:5.1f}%  P {state['power']:4d} W  cad {state['cadence']:5.1f}"
+                  f"  v {state['speed']:5.1f} km/h", flush=True)
+            try:
+                sock.sendto(f"power={state['power']}".encode(), ("127.0.0.1", POWER_PORT))
+            except OSError:
+                pass
+            await asyncio.sleep(1.0)

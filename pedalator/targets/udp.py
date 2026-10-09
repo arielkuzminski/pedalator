@@ -28,14 +28,14 @@ def packet(n: int, power: float, raw: set[str]) -> bytes:
 
 
 async def send_loop(host: str, port: int) -> None:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     n = 0
-    while True:
-        n += 1
-        fresh = time.time() - state["t_packet"] < 2.0 or state["simulate"]
-        raw = set(state["raw"]) if time.time() - state["t_buttons"] < 1.5 else set()
-        try:
-            sock.sendto(packet(n, state["power"] if fresh else 0, raw), (host, port))
-        except OSError:
-            pass
-        await asyncio.sleep(0.05)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:         # closed when the ride ends (the task is cancelled)
+        while True:
+            n += 1
+            fresh = time.time() - state["t_packet"] < 2.0 or state["simulate"]
+            raw = set(state["raw"]) if time.time() - state["t_buttons"] < 1.5 else set()
+            try:
+                sock.sendto(packet(n, state["power"] if fresh else 0, raw), (host, port))
+            except OSError:
+                pass
+            await asyncio.sleep(0.05)

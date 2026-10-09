@@ -48,7 +48,7 @@ def ensure_certs(cert_dir: Path, ip: str) -> tuple[Path, Path]:
     cert_dir.mkdir(parents=True, exist_ok=True)
     pem = serialization.Encoding.PEM
     nokey = serialization.NoEncryption()
-    now = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
+    now = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1)
 
     ca_crt, ca_key = cert_dir / "ca.pem", cert_dir / "ca.key"
     if ca_crt.exists() and ca_key.exists():

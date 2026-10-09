@@ -4,7 +4,7 @@
 
 - A **Bluetooth smart trainer** that speaks FTMS (almost every modern one does). Tested: Van Rysel D500.
 - Optional: **Zwift Click** controllers for steering and actions.
-- **Python 3.10 or newer** on a Windows PC (Windows 10/11).
+- **Python 3.13 or newer** on a Windows PC (Windows 10/11).
 - A game: [OpenMW](games/openmw.md) with Morrowind, [openOMSI](games/openomsi.md), or [any game with keyboard controls](games/keys-and-udp.md).
 - Bluetooth on the PC that can talk to a trainer (a "BLE central"). If yours cannot, use [phone mode](phone-mode.md) — it takes five minutes more.
 
