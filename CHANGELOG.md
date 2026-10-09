@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] — the launcher
+
 ### Changed
 - The throttle key's loop asks Windows for 1 ms timer ticks, so it runs every 50 ms instead of 62.5 ms (a finer "gas").
 - The dashboard's default port is now **2137** (was 8765); `--dashboard-port` still sets it.

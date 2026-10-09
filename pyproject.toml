@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pedalator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ride games with your smart trainer: turns pedalling into game input and the game's hills into trainer resistance."
 readme = "README.md"
 requires-python = ">=3.10"

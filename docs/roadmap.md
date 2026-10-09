@@ -6,9 +6,9 @@ Pedalator works today with [OpenMW](games/openmw.md), [openOMSI](games/openomsi.
 
 The five milestones the maintainer plans to build first (the **Start page** that chooses the game and starts the session from the dashboard is built too: see the changelog), in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
 
-> Suggested order: **5 ✅ → 1 (built, awaiting a hardware test) → 2 (built) → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
+> Suggested order: **5 ✅ → 1 (built, partly tried on hardware) → 2 (built, awaiting a hardware test) → 3 ✅ → 4 ✅ (but the socket-less template)**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
 
-### 1. Zwift Click over the PC's Bluetooth (no phone) — built, needs a hardware test
+### 1. Zwift Click over the PC's Bluetooth (no phone) — built, partly tried on hardware
 
 **Why.** With a USB Bluetooth 5 adapter the PC reads the trainer itself, but today the Click is read only by the phone/laptop page. One device, no browser, no certificates.
 
@@ -18,7 +18,7 @@ The five milestones the maintainer plans to build first (the **Start page** that
 
 **Done when.** `pedalator --target openmw` with a USB adapter reads the trainer *and* the Click, every button works, and no phone is involved.
 
-**Status.** Built (`pedalator/click.py`) and tested against a fake `bleak` and shared decoder vectors; **not yet tried on a real Click through the PC's adapter**. Scans of the trainer and the Click are serialised.
+**Status.** Built (`pedalator/click.py`) and tested against a fake `bleak` and shared decoder vectors. **Tried on real hardware** (a TP-Link UB600 adapter, a Decathlon D500 trainer and a Zwift Click): the PC found and connected both and ran Morrowind. Still open: a long ride on one adapter, and a clean disconnect of both devices on Stop. Scans of the trainer and the Click are serialised.
 
 ### 2. Hybrid mode: trainer on the PC, Click on a laptop or phone — ✅ built
 
@@ -28,7 +28,7 @@ The five milestones the maintainer plans to build first (the **Start page** that
 
 **Done when.** `pedalator --trainer pc --click phone` runs, with the laptop connecting only the Click.
 
-**Status.** Built. Instead of a `?only=` parameter the page asks the PC what it wants (`/phone/ping`) and hides the rest; the PC refuses data it does not want. Needs a hardware test together with milestone 1.
+**Status.** Built; **not yet tried on hardware**. Instead of a `?only=` parameter the page asks the PC what it wants (`/phone/ping`) and hides the rest; the PC refuses data it does not want. Needs a hardware test together with milestone 1.
 
 ### 3. Profiles: import and export of a game's configuration, remappable keys in the dashboard
 
@@ -140,6 +140,9 @@ Status: ✅ done · 💡 idea. "Effort" is a rough guess. APIs of these games ch
 
 ### Experience
 
+- 💡 **A "stop" for trainers that estimate power from a flywheel** (the Decathlon D500 among them): their power fades over 10 s or more after you stop, so the game keeps moving. Ideas: a Click button that zeroes the gas until you pedal again, and treating a sudden drop of power as a stop. See [troubleshooting](troubleshooting.md#the-game-keeps-moving-for-a-few-seconds-after-i-stop-pedalling).
+- ✅ **Bluetooth signal strength** (header and a range check on the Start page), the **Flow check** (times the signal stage by stage) and the **gas options** (*Smooth the gas*, *No gas below*): see the changelog.
+
 - 💡 **Per-vehicle gas curves** in OMSI (bicycle vs bus): a different gas curve for each, chosen automatically from the plugin.
 - 💡 **In-game overlay** of power, cadence and grade.
 - 💡 **Heart-rate and zone** handling (limit effort, "stay in Z2" challenges).
@@ -148,7 +151,8 @@ Status: ✅ done · 💡 idea. "Effort" is a rough guess. APIs of these games ch
 
 ### Project
 
-- 💡 **`pedalator doctor`** command: checks Python, Bluetooth, ports, firewall, game installs.
+- 💡 **`pedalator doctor`** command: checks Python, Bluetooth, ports, firewall, game installs (the Start page's signal check and the Flow check cover part of it).
+- ✅ **Start page and sessions:** choose a game and start or stop a ride from the dashboard, no restart needed.
 - 💡 **Config file** (TOML) and remembered settings.
 - 💡 **Windows installer / single-file exe** (PyInstaller), and a PyPI package.
 - 💡 More dashboard languages (translations live in a small dictionary at the top of each page script).

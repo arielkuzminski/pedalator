@@ -40,7 +40,8 @@ def find_chrome() -> str:
 
 
 def post(port: int, path: str, body: dict) -> None:
-    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(body).encode(), method="POST")
+    req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=json.dumps(body).encode(), method="POST",
+                                 headers={"Content-Type": "application/json"})
     urllib.request.urlopen(req, timeout=3).read()
 
 
