@@ -10,7 +10,7 @@ from pedalator.state import state
 from .test_dashboard_session import dash  # noqa: F401  (the fixture)
 
 
-def ride(seconds=10.0, ble_every=0.25, ble_gaps=(), loop_every=0.05, loop_stalls=(), key_holes=(), os_delay=0.0):
+def ride(seconds=10.0, ble_every=0.25, ble_gaps=(), loop_every=0.05, loop_stalls=(), key_holes=(), os_delay=0.0, gas_off=()):
     """Events of a ride at 90 W (gas 0.72): the trainer, the loop, the keys it presses and the OS's delivery.
     ``ble_gaps`` etc. are the times at which that stage goes quiet for a while: (start, length)."""
     ev = {"ble": [], "duty": [], "key": [], "os": []}
@@ -22,8 +22,9 @@ def ride(seconds=10.0, ble_every=0.25, ble_gaps=(), loop_every=0.05, loop_stalls
     t = 0.0
     while t < seconds:
         stall = next((n for a, n in loop_stalls if abs(t - a) < loop_every / 2), 0.0)
-        ev["duty"].append((t, 0.72))
-        hole = any(a <= t < a + n for a, n in key_holes)
+        off = any(a <= t < a + n for a, n in gas_off)
+        ev["duty"].append((t, 0.0 if off else 0.72))
+        hole = off or any(a <= t < a + n for a, n in key_holes)
         if not hole:
             ev["key"].append((t, "throttle", True))
             ev["key"].append((t + 0.036, "throttle", False))
@@ -59,6 +60,11 @@ def test_holes_in_the_key_presses_are_found():
     r = diag.analyze(ride(key_holes=[(4.0, 0.5)]), 10.0)
     assert r["keys"]["holes"] == 1 and r["keys"]["worst_hole_ms"] >= 450
     assert r["verdict"]["code"] in ("keys", "loop")           # (a hole in the presses is also a quiet loop's trait)
+
+
+def test_a_pause_with_no_gas_is_not_a_hole():
+    r = diag.analyze(ride(gas_off=[(4.0, 0.4)]), 10.0)           # the power fell under the floor for 0.4 s
+    assert r["keys"]["holes"] == 0 and r["keys"]["gas_off_pct"] >= 3 and r["verdict"]["code"] == "ok"
 
 
 def test_late_delivery_by_windows_is_blamed_on_windows():

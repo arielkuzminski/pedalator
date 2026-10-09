@@ -398,7 +398,7 @@ const PL = {
   'Delivered by Windows': 'Dostarczone przez Windows',
   '{0} packets while pedalling; typical gap {1} ms, worst {2} ms, gaps over 0.5 s: {3}': '{0} pakietów podczas pedałowania; typowa przerwa {1} ms, najgorsza {2} ms, przerw ponad 0,5 s: {3}',
   'ticks every {0} ms (should be about 50), worst {1} ms, ticks over 100 ms: {2}': 'tyknięcia co {0} ms (powinno być około 50), najgorsze {1} ms, ponad 100 ms: {2}',
-  '{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average': '{0} wciśnięć, dziur w sygnale: {1} (najgorsza {2} ms), gaz odbiega średnio o {3}',
+  '{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average, no gas (power under 15 W) {4}% of the time': '{0} wciśnięć, dziur w sygnale: {1} (najgorsza {2} ms), gaz odbiega średnio o {3}, brak gazu (moc poniżej 15 W) przez {4}% czasu',
   '{0} key-down events, delay at worst {1} ms, longest gap between them {2} ms': '{0} zdarzeń wciśnięcia, opóźnienie w najgorszym razie {1} ms, najdłuższa przerwa między nimi {2} ms',
   'not measured (Windows only)': 'niemierzone (tylko Windows)',
   'Recording… {0} / {1} s': 'Nagrywanie… {0} / {1} s',
@@ -1238,7 +1238,7 @@ function renderFlow(v) {
     [t("Pedalator's loop"), r.loop.over_200ms === 0 && r.loop.max <= 150,
       t('ticks every {0} ms (should be about 50), worst {1} ms, ticks over 100 ms: {2}', r.loop.p50, r.loop.max, r.loop.over_100ms)],
     [t('Key presses sent'), r.keys.holes === 0 || r.keys.worst_hole_ms <= 200,
-      t('{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average', r.keys.presses, r.keys.holes, r.keys.worst_hole_ms, r.keys.gas_error)],
+      t('{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average, no gas (power under 15 W) {4}% of the time', r.keys.presses, r.keys.holes, r.keys.worst_hole_ms, r.keys.gas_error, r.keys.gas_off_pct)],
     [t('Delivered by Windows'), r.os.available ? r.os.latency_max_ms <= 150 : null,
       r.os.available ? t('{0} key-down events, delay at worst {1} ms, longest gap between them {2} ms', r.os.downs, r.os.latency_max_ms, r.os.worst_gap_ms) : t('not measured (Windows only)')],
   ];

@@ -126,6 +126,13 @@ def _down_share(keys: list[tuple[float, bool]], t0: float, t1: float) -> float:
     return total / (t1 - t0)
 
 
+def _gas_wanted(duty: list[tuple], t0: float, t1: float) -> bool:
+    """Was there gas (a duty above 0) at every loop tick from just before t0 to t1? Then a key that stays up is a hole."""
+    i = max(0, bisect.bisect_right(duty, t0, key=lambda e: e[0]) - 1)
+    j = bisect.bisect_right(duty, t1, key=lambda e: e[0])
+    return j > i and all(d > 0 for _, d in duty[i:j])
+
+
 def analyze(ev: dict, seconds: float, slot: str = "throttle", os_ok: bool = True) -> dict:
     """``ev``: kind -> list of tuples, all starting with a time from ``time.perf_counter``:
     ble (t, power), duty (t, duty), key (t, slot, down), os (t, down, injected)."""
@@ -151,7 +158,7 @@ def analyze(ev: dict, seconds: float, slot: str = "throttle", os_ok: bool = True
         if not down and up_since is None:
             up_since = t
         elif down and up_since is not None:
-            if t - up_since > HOLE and _value_at(duty, up_since) > 0 and _value_at(duty, t) > 0:
+            if t - up_since > HOLE and _gas_wanted(duty, up_since, t):
                 holes.append(t - up_since)
             up_since = None
     held, down_since = [], None
@@ -173,7 +180,8 @@ def analyze(ev: dict, seconds: float, slot: str = "throttle", os_ok: bool = True
     out["keys"] = {"presses": sum(1 for _, d in sent if d), "holes": len(holes),
                    "worst_hole_ms": round(max(holes, default=0.0) * 1000),
                    "longest_hold_ms": round(max(held, default=0.0) * 1000),
-                   "gas_error": round(sum(errs) / len(errs), 2) if errs else 0.0}
+                   "gas_error": round(sum(errs) / len(errs), 2) if errs else 0.0,
+                   "gas_off_pct": round(100 * sum(1 for _, d in duty if d == 0) / len(duty)) if duty else 0}
 
     # 4. what Windows delivered: the delay from our SendInput to the hook, and the gaps between key-down events
     delivered = ev.get("os", [])
