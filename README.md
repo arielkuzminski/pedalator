@@ -52,7 +52,7 @@ flowchart LR
     B(("Pedalator<br/>bridge")) -- "resistance = the game's hills" --> T
     B -- "gas, steering, attack…" --> G["Game<br/>OpenMW · openOMSI · any"]
     G -- "gradient of the ground" --> B
-    B --- D["Dashboard<br/>localhost:8765"]
+    B --- D["Dashboard<br/>localhost:2137"]
     P["Phone or laptop<br/>(Web Bluetooth)"] -. "only if the PC has no BLE" .-> B
     P -. Bluetooth .- T
     P -. Bluetooth .- C
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 ```bash
 python -m pedalator --simulate
 ```
-Open <http://127.0.0.1:8765>. A made-up rider sprints and rests; try the riding modes and the resistance slider.
+Open <http://127.0.0.1:2137>. A made-up rider sprints and rests; try the riding modes and the resistance slider.
 
 **2. Morrowind in OpenMW**
 

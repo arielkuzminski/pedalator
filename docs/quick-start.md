@@ -26,7 +26,7 @@ Everything below is run from this folder with `python -m pedalator ...`.
 python -m pedalator
 ```
 
-With no options, Pedalator opens only the dashboard (<http://127.0.0.1:8765>) on its **Start** tab. Choose a game (or make one with *New game*), say how you ride (a simulated rider, this PC's Bluetooth or a phone; the Click automatic, on the PC, on the phone or off) and press **Start riding**. Only then are the trainer, the Click and the game connected. **Stop** (on the Start page or in the header) lets everything go again, so you can pick another game without restarting. The sections below do the same from the command line: giving a game or a rider (`--target`, `--profile`, `--simulate`, `--remote`, `--keys`…) starts riding at once, as before; `--launcher` forces the Start page.
+With no options, Pedalator opens only the dashboard (<http://127.0.0.1:2137>) on its **Start** tab. Choose a game (or make one with *New game*), say how you ride (a simulated rider, this PC's Bluetooth or a phone; the Click automatic, on the PC, on the phone or off) and press **Start riding**. Only then are the trainer, the Click and the game connected. **Stop** (on the Start page or in the header) lets everything go again, so you can pick another game without restarting. The sections below do the same from the command line: giving a game or a rider (`--target`, `--profile`, `--simulate`, `--remote`, `--keys`…) starts riding at once, as before; `--launcher` forces the Start page.
 
 ## 1. Try it without hardware
 
@@ -34,7 +34,7 @@ With no options, Pedalator opens only the dashboard (<http://127.0.0.1:8765>) on
 python -m pedalator --simulate
 ```
 
-Open <http://127.0.0.1:8765>. A made-up rider sprints and rests every 45 seconds. Switch the **riding mode**, move the **Manual** resistance slider, watch the power zones. Stop with `Ctrl+C`.
+Open <http://127.0.0.1:2137>. A made-up rider sprints and rests every 45 seconds. Switch the **riding mode**, move the **Manual** resistance slider, watch the power zones. Stop with `Ctrl+C`.
 
 ## 2. Check that your trainer is found
 
@@ -68,7 +68,7 @@ Add `--remote` to any of these if the phone or laptop does the Bluetooth.
 | `--pmax 250` | power that means "full throttle" at gain ×1 |
 | `--address AA:BB:...` | connect to this trainer instead of scanning |
 | `--trainer pc\|phone`, `--click pc\|phone\|off` | who reads the trainer and the Click ([hybrid mode](phone-mode.md#hybrid-mode-the-pc-reads-one-thing-the-phone-the-other)) |
-| `--dashboard-port 8765` | the dashboard's port |
+| `--dashboard-port 2137` | the dashboard's port |
 | `python -m pedalator --help` | everything |
 
 ## Stopping

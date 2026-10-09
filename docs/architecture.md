@@ -52,7 +52,7 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 
 | Address | Protocol | Reachable from | Purpose |
 |---|---|---|---|
-| `127.0.0.1:8765` | HTTP | this PC | dashboard (`--dashboard-port`) |
+| `127.0.0.1:2137` | HTTP | this PC | dashboard (`--dashboard-port`) |
 | `0.0.0.0:8766` | HTTPS | your LAN | phone page and API; needs the token (`?t=…`) |
 | `0.0.0.0:8767` | HTTP | your LAN | only `ca.crt`, to install on the phone |
 | `127.0.0.1:27100/udp` | UDP | this PC | a game reports `grade=…;speed=…` (`--game-port`) |
@@ -75,7 +75,7 @@ n=1234;move=0.570;turn=-1;look=0;atk=0;jump=0;draw=0;power=143;diff=40
 
 The mod prints `PEDALATOR grade=<percent>` into `openmw.log` about four times a second.
 
-### Dashboard API (`127.0.0.1:8765`)
+### Dashboard API (`127.0.0.1:2137`)
 
 | Request | |
 |---|---|

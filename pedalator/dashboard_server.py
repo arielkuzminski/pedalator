@@ -1,4 +1,4 @@
-"""The dashboard: http://127.0.0.1:8765 (this PC only). Live values, riding modes, a manual resistance slider, and the
+"""The dashboard: http://127.0.0.1:2137 (this PC only). Live values, riding modes, a manual resistance slider, and the
 Controls page (profiles: Click buttons, keys, options — see profiles.py).
 
 Because it is a web page on localhost, any web page you open could try to talk to it. So every request must carry

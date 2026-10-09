@@ -18,7 +18,7 @@ pedalator new-game --name "Space Cycle" --how udp --slope
 
 ## In the dashboard
 
-The same wizard is on the dashboard's **Game** tab (`http://127.0.0.1:8765/#game`):
+The same wizard is on the dashboard's **Game** tab (`http://127.0.0.1:2137/#game`):
 
 - **New game**: name, how to reach it, the four keys (click a key, press the one you want) and, for UDP, whether the game reports the slope. *Create* saves the profile and writes the files to `games/<id>` in your Pedalator data folder; from there you can open the folder or use the profile at once (when it matches the running target).
 - **Test panel**: live gas, turning, looking, the Click buttons held and the exact UDP packet being sent, so you can check the game's side without a mod. *Test a key* tells you the key name of any key and whether Pedalator can press it.

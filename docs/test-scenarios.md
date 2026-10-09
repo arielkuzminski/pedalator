@@ -4,13 +4,13 @@ Manual scenarios for what automated tests cannot reach: real Bluetooth, real gam
 Automated checks first: `python -m ruff check .`, `python -m pytest -q`, `node --test "tests/js/*.test.js"`.
 
 Mark each scenario **PASS / FAIL** with a note. Start with part A (no hardware), then B (hardware).
-Close any old `pedalator.exe` first: it holds port 8765 with old code.
+Close any old `pedalator.exe` first: an old instance may still hold its port (8765 in older builds).
 
 ## A. No hardware (simulated rider)
 
 | # | Scenario | Steps | Expected |
 |---|----------|-------|----------|
-| A1 | Launcher opens idle | Run `pedalator`; open http://127.0.0.1:8765 | Start tab is shown, header chip "No ride", Ride tab says no ride is running |
+| A1 | Launcher opens idle | Run `pedalator`; open http://127.0.0.1:2137 | Start tab is shown, header chip "No ride", Ride tab says no ride is running |
 | A2 | Autostart still works | `pedalator --simulate --target keys` | Dashboard opens on Ride, data flows, chip "Riding" |
 | A3 | Start and stop (keys) | Start tab → pick a keyboard game → trainer *Simulated* → Start riding | Moves to Ride, power/cadence/speed change; Stop returns to Start, values reset to 0 |
 | A4 | Switch game without restart | After A3 pick OpenMW or a UDP game → Start | Starts cleanly, no "port in use" error, no leftover values |

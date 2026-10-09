@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- The dashboard's default port is now **2137** (was 8765); `--dashboard-port` still sets it.
+
 ### Added
 - **Bluetooth signal strength:** the header shows the dBm the trainer and the Click had when the PC found them (red dot when weak), and the Start page has **Check signal strength**, a short scan for placing the adapter before a ride. Windows gives no signal reading for a connected device, so the header shows the value from the last discovery, not a live one.
 - **Start page (launcher):** `pedalator` with no game or rider now opens only the dashboard. Choose a game, pick the trainer (simulated, this PC's Bluetooth, phone) and the Click, press **Start riding**; **Stop** releases the trainer, the Click, the game's port and the phone servers so another game can be started without restarting. Giving a game or a rider on the command line still starts riding at once; `--launcher` forces the Start page. New `pedalator/session.py`; `--target` no longer defaults to `keys` (a profile alone now brings its own target).

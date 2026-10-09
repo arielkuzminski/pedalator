@@ -123,7 +123,7 @@ pedalator --profile {id}{extra}
 ```
 
 {steps}
-Open the dashboard (http://127.0.0.1:8765) and the **Controls** tab to change buttons and keys while you ride. To
+Open the dashboard (http://127.0.0.1:2137) and the **Controls** tab to change buttons and keys while you ride. To
 share this setup: `pedalator profile export {id} --out {id}.json`.
 '''
 

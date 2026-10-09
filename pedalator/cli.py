@@ -64,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
                       help="share of the game's hills the trainer simulates, 0..1 (default: from the mode)")
     feel.add_argument("--pmax", type=float, help="watts that mean full throttle at gain 1 (default 250)")
     feel.add_argument("--ftp", type=int, help="your FTP in watts, for the dashboard's power zones (default 200)")
-    ap.add_argument("--dashboard-port", type=int, default=8765, help="dashboard on http://127.0.0.1:PORT")
+    ap.add_argument("--dashboard-port", type=int, default=2137, help="dashboard on http://127.0.0.1:PORT")
     ap.add_argument("--game-port", type=int, default=27100,
                     help="UDP port a game plugin reports the gradient to (localhost only, default 27100)")
     return ap
