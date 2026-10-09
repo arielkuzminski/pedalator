@@ -23,6 +23,7 @@ state: dict = {
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",
+    "smooth": True,          # keep the gas for SMOOTH_HOLD s when the power dips under the floor (pedal strokes, a soft patch)
     "target": "keys",                # which game target runs: keys | openmw | udp
     "profile": None, "profile_id": None,   # the active profile (see profiles.py)
     "notice": "", "t_notice": 0.0,   # a short message for the rider, e.g. "difficulty:60" (shown for 3 s)
@@ -49,6 +50,7 @@ def reset_session() -> None:
                  trainer_rssi=None, click_rssi=None)
     history.clear()
     stats.update(sum=0.0, n=0, max=0)
+    forget_gas()
 
 
 def start_clock(running: bool) -> None:
@@ -103,8 +105,27 @@ def effective_grade() -> float:
     return g
 
 
+SMOOTH_HOLD = 0.8            # seconds the gas outlasts a dip of the power under the floor, with ``state['smooth']``
+_last_gas = {"power": 0.0, "t": -1e9}
+
+
+def forget_gas() -> None:
+    """Drop the held gas: after this, no power means no gas (a ride is over, so nothing may keep the game moving)."""
+    _last_gas.update(power=0.0, t=-1e9)
+
+
 def throttle_for(power: float, floor: float = 15.0) -> float:
-    """0..1 'gas' for a rider power: coasting below ``floor`` watts, full at pmax / gain."""
+    """0..1 'gas' for a rider power: coasting below ``floor`` watts, full at pmax / gain.
+
+    A trainer reports the power of the moment, which dips to nothing between pedal strokes and when you ease off.
+    With ``state['smooth']`` a dip shorter than SMOOTH_HOLD keeps the last gas; a longer one (you stopped) lets go.
+    """
+    if state["smooth"]:
+        now = time.monotonic()
+        if power >= floor:
+            _last_gas.update(power=power, t=now)
+        elif now - _last_gas["t"] < SMOOTH_HOLD:
+            power = _last_gas["power"]
     if power < floor:
         return 0.0
     return min(1.0, power * state["gain"] / state["pmax"])

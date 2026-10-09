@@ -295,3 +295,11 @@ def test_extended_keys_are_sent_with_the_extended_flag(monkeypatch):
     keys.key("left", True)
     keys.key("left", False)
     assert sent == [0x0008 | 0x0001, 0x0008 | 0x0001 | 0x0002]
+
+
+def test_the_smooth_gas_option_is_a_boolean_in_the_ride_settings():
+    base = {"id": "x", "name": "X", "target": "keys"}
+    ok, errors = profiles.validate({**base, "ride": {"smooth": False}})
+    assert not errors and ok["ride"]["smooth"] is False
+    _, errors = profiles.validate({**base, "ride": {"smooth": "yes"}})
+    assert any("smooth" in e for e in errors)

@@ -271,6 +271,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
             elif self.route == "/difficulty":
                 state["difficulty"] = max(0.0, min(1.0, float(body["difficulty"])))
                 state["preset"] = "custom"
+            elif self.route == "/smooth":
+                if not isinstance(body["smooth"], bool):
+                    raise ValueError("smooth must be true or false")
+                state["smooth"] = body["smooth"]
             elif self.route == "/ftp":
                 state["ftp"] = max(50, min(600, int(body["ftp"])))
             else:

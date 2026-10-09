@@ -158,3 +158,10 @@ def test_the_signal_check_scans_when_idle_and_is_refused_during_a_ride(dash, mon
         assert dash.get("/session/signal")[0] == 409
     finally:
         state["session"] = {"status": "idle"}
+
+
+def test_the_smooth_gas_option_is_set_from_the_page(dash):
+    assert dash.post("/smooth", {"smooth": False})[0] == 200
+    assert state["smooth"] is False
+    assert dash.post("/smooth", {"smooth": "no"})[0] == 400
+    assert state["smooth"] is False

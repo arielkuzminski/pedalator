@@ -191,6 +191,11 @@ def validate(data: object, fill_keys: bool = False) -> tuple[dict, list[str]]:
     if not isinstance(raw_ride, dict):
         errors.append("ride must be an object")
         raw_ride = {}
+    if raw_ride.get("smooth") is not None:
+        if isinstance(raw_ride["smooth"], bool):
+            ride["smooth"] = raw_ride["smooth"]
+        else:
+            errors.append("ride.smooth must be true or false")
     if "mode" in raw_ride:
         if raw_ride["mode"] in PRESETS:
             ride["mode"] = raw_ride["mode"]
@@ -313,6 +318,8 @@ def apply(profile: dict) -> None:
             state["pmax"] = ride["pmax"]
         if "ftp" in ride:
             state["ftp"] = int(ride["ftp"])
+        if "smooth" in ride:
+            state["smooth"] = ride["smooth"]
 
 
 def describe(profile: dict) -> dict:

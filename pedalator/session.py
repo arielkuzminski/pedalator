@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import profiles
-from .state import apply_preset, log, reset_session, start_clock, state
+from .state import apply_preset, forget_gas, log, reset_session, start_clock, state
 
 TRAINER_SOURCES = ("pc", "phone")
 CLICK_SOURCES = ("auto", "pc", "phone", "off")
@@ -286,6 +286,7 @@ class Runtime:
 
     def _zero_outputs(self) -> None:
         """Tell the game that nobody is pedalling any more (the last message would otherwise stay in force)."""
+        forget_gas()                                    # (or the held gas would still tell the game to move)
         outputs, self._outputs = self._outputs, {}
         if "openmw_state" in outputs:
             from .targets import openmw
