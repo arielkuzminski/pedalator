@@ -45,8 +45,9 @@ def test_a_controller_is_recognised_by_its_service_not_by_its_name():
 
 # ----------------------------------------------------------------------------- a fake bleak
 class FakeAdv:
-    def __init__(self, service_uuids=(), manufacturer_data=None, local_name=None):
+    def __init__(self, service_uuids=(), manufacturer_data=None, local_name=None, rssi=-60):
         self.service_uuids, self.manufacturer_data, self.local_name = list(service_uuids), manufacturer_data or {}, local_name
+        self.rssi = rssi
 
 
 class FakeDev:
@@ -188,3 +189,22 @@ def test_the_trainer_and_the_click_are_never_scanned_for_at_the_same_time(monkey
 
     asyncio.run(scenario())
     assert peak[0] == 1
+
+
+def test_the_signal_strength_is_noted_when_a_device_is_found(fake_bleak):
+    state.update(click_rssi=None)
+    fake_bleak["AA:03"] = (FakeDev("Zwift Click"), FakeAdv(service_uuids=[click.SERVICES[1]], rssi=-77))
+    asyncio.run(click.find_click(0.1))
+    assert state["click_rssi"] == -77
+
+
+def test_the_range_check_reports_the_strongest_trainer_and_click(fake_bleak):
+    from pedalator.ftms import FTMS
+    fake_bleak["AA:01"] = (FakeDev("Mi Kettle"), FakeAdv(rssi=-40))
+    fake_bleak["AA:02"] = (FakeDev("KICKR"), FakeAdv(service_uuids=[FTMS.upper()], rssi=-90))
+    fake_bleak["AA:04"] = (FakeDev("KICKR 2"), FakeAdv(service_uuids=[FTMS], rssi=-60))
+    fake_bleak["AA:03"] = (FakeDev("Zwift Click"), FakeAdv(service_uuids=[click.SERVICES[1]], rssi=-94))
+    assert asyncio.run(click.check_range(0.1)) == {"trainer": {"name": "KICKR 2", "rssi": -60},
+                                                   "click": {"name": "Zwift Click", "rssi": -94}}
+    fake_bleak.clear()
+    assert asyncio.run(click.check_range(0.1)) == {"trainer": None, "click": None}

@@ -16,6 +16,7 @@ def clean_state():
     S.history.clear()
     S.log_lines.clear()
     S.stats.update(sum=0.0, n=0, max=0)
+    S.forget_gas()
     yield
 
 

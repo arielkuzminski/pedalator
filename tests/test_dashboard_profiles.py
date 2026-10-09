@@ -16,6 +16,7 @@ from .conftest import free_port
 def dash(tmp_path):
     profiles.set_user_dir(tmp_path / "profiles")
     state["target"] = "openmw"
+    state["session"] = {"status": "running"}   # a bridge is riding: the target is fixed
     port = free_port()
     srv = start_dashboard(port)
 

@@ -17,7 +17,7 @@ from ..state import clamp_grade, log, state, throttle_for
 GRADE_LINE = re.compile(rb"PEDALATOR grade=(-?[0-9.]+)")
 
 
-def state_line(n: int, power: float, raw: set[str], floor: float = 15.0) -> str:
+def state_line(n: int, power: float, raw: set[str], floor: float | None = None) -> str:
     """One line for the mod's player script. ``move`` is 0..1, ``turn`` +1 is right, ``look`` +1 is down."""
     def held(action: str) -> int:
         return 1 if profiles.held("openmw", action, raw) else 0
@@ -39,7 +39,7 @@ def parse_grades(chunk: bytes) -> list[float]:
     return [clamp_grade(float(m.group(1))) for m in GRADE_LINE.finditer(chunk)]
 
 
-async def state_loop(path: Path, floor: float = 15.0) -> None:
+async def state_loop(path: Path, floor: float | None = None) -> None:
     """~20 Hz: rewrite the state file in place (the game indexes the path at start, so it must not be recreated)."""
     n = 0
     while True:

@@ -104,3 +104,11 @@ def test_install_openmw_copies_the_mod_and_edits_the_config_with_a_backup(tmp_pa
     before = cfg.read_text()
     assert install.install_openmw(user, None) == 0 and cfg.read_text() == before     # idempotent
     assert Path(mod / "pedalator" / "state.txt").read_text().startswith("n=")
+
+
+def test_install_keeps_crlf_line_endings_in_the_file(tmp_path):
+    from pedalator import install
+    (tmp_path / "openmw.cfg").write_bytes(b"data=\"C:/x\"\r\ncontent=a.esm\r\n")
+    assert install.install_openmw(tmp_path, tmp_path / "mod") == 0
+    raw = (tmp_path / "openmw.cfg").read_bytes()
+    assert b"\r\n" in raw and b"\n" not in raw.replace(b"\r\n", b"")

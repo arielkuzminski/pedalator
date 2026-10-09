@@ -9,6 +9,7 @@ import asyncio
 import time
 
 from .ble import scan_lock
+from .ftms import FTMS
 from .state import log, state
 
 # Zwift's custom services: Click v1 / Play, and Click v2 / Ride
@@ -135,8 +136,25 @@ async def find_click(timeout: float = 6.0) -> tuple[str, str] | None:
         devs = await BleakScanner.discover(timeout=timeout, return_adv=True)
     for addr, (dev, adv) in devs.items():
         if is_zwift_controller(adv.service_uuids, adv.manufacturer_data, dev.name or adv.local_name):
+            state["click_rssi"] = adv.rssi
             return addr, dev.name or adv.local_name or addr
     return None
+
+
+async def check_range(timeout: float = 6.0) -> dict:
+    """One scan, for placing the adapter before a ride: the strongest trainer and Zwift controller in range,
+    each as ``{"name", "rssi"}`` (dBm; closer to 0 is stronger) or None."""
+    from bleak import BleakScanner
+    async with scan_lock():
+        devs = await BleakScanner.discover(timeout=timeout, return_adv=True)
+    found: dict = {"trainer": None, "click": None}
+    for addr, (dev, adv) in devs.items():
+        name = dev.name or adv.local_name or addr
+        kind = ("trainer" if FTMS.lower() in {u.lower() for u in adv.service_uuids}
+                else "click" if is_zwift_controller(adv.service_uuids, adv.manufacturer_data, name) else None)
+        if kind and (found[kind] is None or adv.rssi > found[kind]["rssi"]):
+            found[kind] = {"name": name, "rssi": adv.rssi}
+    return found
 
 
 async def click_session(address: str, name: str) -> None:

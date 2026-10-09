@@ -12,7 +12,7 @@ Open the **Controls** tab.
 - **Buttons**: for each Click button choose an action from the list, or *none*. The button you press lights up, so you can find it.
 - **Keys**: click a key slot, then press the key you want. Modifier keys such as Alt and the Windows key are not allowed, so a profile cannot trigger shortcuts.
 - **Options**: game-specific tuning (OpenMW: turn and look speed, run threshold, speed-attribute mode).
-- **Ride**: default mode, gain, difficulty, `pmax`, `ftp`.
+- **Ride**: default mode, gain, difficulty, `pmax`, `ftp`, `smooth` (keep the gas through short dips of the power), `floor` (watts under which there is no gas).
 - **Save** overwrites your profile, **Save as…** makes a new one (a built-in is never changed), **Reset** returns to the saved state, **Export** downloads the JSON, **Import** loads a file and shows what is wrong with it, if anything.
 
 Unsaved edits work in the running session but are lost on restart; the Controls tab marks them as *unsaved*.
@@ -50,7 +50,7 @@ pedalator profile delete my-morrowind
 - `bindings`: button (`UP DOWN LEFT RIGHT A B Y Z MINUS PLUS`) to action. The actions depend on the target (`steer_left`, `brake`, `attack`, `jump`, `difficulty_up`…). Use `"none"` to leave a button free.
 - `keys`: slot to a browser key name (`KeyW`, `Numpad8`, `ArrowUp`, `Space`…). Missing slots take the target's default.
 - `options`: see the dashboard for the list and the allowed ranges.
-- `ride`: any of `mode`, `gain`, `difficulty`, `pmax`, `ftp`. These are applied when you select the profile, not on every edit, so changing a button never resets the difficulty you set with the Click.
+- `ride`: any of `mode`, `gain`, `difficulty`, `pmax`, `ftp`, `smooth` (true/false). These are applied when you select the profile, not on every edit, so changing a button never resets the difficulty you set with the Click.
 
 A bad file is never half-applied: the importer lists every problem (unknown button, action from another target, unknown key, number out of range…) and changes nothing.
 

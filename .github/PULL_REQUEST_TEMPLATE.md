@@ -4,7 +4,7 @@
 
 ## How it was tested
 
-- [ ] `python -m ruff check .`, `python -m pytest -q` and `node --test "tests/js/*.test.js"` pass
+- [ ] `python -m ruff check .`, `python -m pytest -q` and `node --test` pass
 - [ ] Tested on real hardware: <!-- trainer / controller / game / OS, or "not tested on hardware" -->
 
 ## Checklist

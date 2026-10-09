@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): a dashboard version of the new-game wizard, and hardware tests of the direct Bluetooth path.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): hardware tests of the direct Bluetooth path.
 
 ## How it works
 
@@ -52,13 +52,13 @@ flowchart LR
     B(("Pedalator<br/>bridge")) -- "resistance = the game's hills" --> T
     B -- "gas, steering, attack…" --> G["Game<br/>OpenMW · openOMSI · any"]
     G -- "gradient of the ground" --> B
-    B --- D["Dashboard<br/>localhost:8765"]
+    B --- D["Dashboard<br/>localhost:2137"]
     P["Phone or laptop<br/>(Web Bluetooth)"] -. "only if the PC has no BLE" .-> B
     P -. Bluetooth .- T
     P -. Bluetooth .- C
 ```
 
-The **bridge** (`python -m pedalator`) is the middle: it reads the trainer, decides what the game should get, and sends the game's gradient back to the trainer. How it talks to a game depends on the game — see [Architecture](docs/architecture.md).
+The **bridge** (`python -m pedalator`, which opens a Start page where you choose the game and start riding) is the middle: it reads the trainer, decides what the game should get, and sends the game's gradient back to the trainer. How it talks to a game depends on the game — see [Architecture](docs/architecture.md).
 
 ## Quick start
 
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 ```bash
 python -m pedalator --simulate
 ```
-Open <http://127.0.0.1:8765>. A made-up rider sprints and rests; try the riding modes and the resistance slider.
+Open <http://127.0.0.1:2137>. A made-up rider sprints and rests; try the riding modes and the resistance slider.
 
 **2. Morrowind in OpenMW**
 

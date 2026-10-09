@@ -15,7 +15,7 @@ pip install -e ".[dev]"
 ```bash
 python -m ruff check .            # lint
 python -m pytest -q               # Python tests (servers, state, targets, installers, bike builder)
-node --test "tests/js/*.test.js"  # JavaScript tests (Click decoders, request queue)
+node --test  # JavaScript tests (Click decoders, request queue)
 ```
 
 These three run in CI (`.github/workflows/ci.yml`) on every push and pull request. No test needs a trainer, a phone or a game: the servers are started on free ports, the bike builder works on a small made-up fixture, and the installers on temporary folders.

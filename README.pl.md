@@ -41,7 +41,7 @@
 
 Pedalator to **oprogramowanie w wersji alfa**: autorowi działa na co dzień, ale spodziewaj się zadziorów. Jeśli coś nie działa, otwórz zgłoszenie.
 
-**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): wersja kreatora nowej gry w panelu oraz testy bezpośredniego Bluetooth na sprzęcie.
+**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): testy bezpośredniego Bluetooth na sprzęcie.
 
 ## Jak to działa
 
@@ -52,7 +52,7 @@ flowchart LR
     B(("Pedalator<br/>most")) -- "opór = górki z gry" --> T
     B -- "gaz, skręt, atak…" --> G["Gra<br/>OpenMW · openOMSI · inna"]
     G -- "nachylenie terenu" --> B
-    B --- D["Panel<br/>localhost:8765"]
+    B --- D["Panel<br/>localhost:2137"]
     P["Telefon lub laptop<br/>(Web Bluetooth)"] -. "gdy PC nie ma BLE" .-> B
     P -. Bluetooth .- T
     P -. Bluetooth .- C
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 ```bash
 python -m pedalator --simulate
 ```
-Otwórz <http://127.0.0.1:8765>. Zmyślony kolarz sprintuje i odpoczywa; wypróbuj tryby jazdy i suwak oporu.
+Otwórz <http://127.0.0.1:2137>. Zmyślony kolarz sprintuje i odpoczywa; wypróbuj tryby jazdy i suwak oporu.
 
 **2. Morrowind w OpenMW**
 

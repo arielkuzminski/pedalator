@@ -20,7 +20,8 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 
 | Module | Job |
 |---|---|
-| `cli.py` | command line; wires the tasks together |
+| `cli.py` | command line; starts the dashboard and, when a game or rider is given, a session |
+| `session.py` | the driver session: starts and stops the trainer, Click, game loops and phone servers on demand (the Start page uses it) |
 | `state.py` | the shared state, riding modes, `effective_grade()`, `throttle_for()` |
 | `ftms.py` | FTMS constants, parser of Indoor Bike Data, the simulation command, handlers |
 | `ble.py` | direct Bluetooth LE with `bleak` (scan, connect, write the gradient every second); one scan at a time |
@@ -51,7 +52,7 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 
 | Address | Protocol | Reachable from | Purpose |
 |---|---|---|---|
-| `127.0.0.1:8765` | HTTP | this PC | dashboard (`--dashboard-port`) |
+| `127.0.0.1:2137` | HTTP | this PC | dashboard (`--dashboard-port`) |
 | `0.0.0.0:8766` | HTTPS | your LAN | phone page and API; needs the token (`?t=…`) |
 | `0.0.0.0:8767` | HTTP | your LAN | only `ca.crt`, to install on the phone |
 | `127.0.0.1:27100/udp` | UDP | this PC | a game reports `grade=…;speed=…` (`--game-port`) |
@@ -74,7 +75,7 @@ n=1234;move=0.570;turn=-1;look=0;atk=0;jump=0;draw=0;power=143;diff=40
 
 The mod prints `PEDALATOR grade=<percent>` into `openmw.log` about four times a second.
 
-### Dashboard API (`127.0.0.1:8765`)
+### Dashboard API (`127.0.0.1:2137`)
 
 | Request | |
 |---|---|

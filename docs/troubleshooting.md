@@ -52,3 +52,29 @@ Start with the console: Pedalator prints what it sees, and the dashboard's **Deb
 - The console output from the start of the run, and the dashboard's *Event log*.
 - Your trainer and Click models, Windows version, phone and browser if phone mode.
 - For a controller or trainer problem: the *Raw packet* line (and, for the Click, the `Click: …` lines from the phone page).
+
+## The keys stutter or the data comes in gaps
+
+Open the **Ride** tab, **Flow check**, pedal steadily and press **Record**. It times the trainer's Bluetooth packets,
+Pedalator's own loop, the key presses it sends and what Windows delivers, and names the first stage that is not smooth:
+
+| Verdict | What to do |
+|---------|-----------|
+| Bluetooth | Packets arrive with gaps: move the adapter closer (USB extension cable, USB 2.0 port) or read the trainer with the phone |
+| Loop | Something on the PC blocks Pedalator for over 0.15 s: close heavy programs |
+| Key presses / Windows | Send the table to the developer |
+| Smooth | The receiving program is the cause: a text box adds its own key-repeat delay, so a game is a better test than Notepad |
+
+Without a trainer, `python -m pedalator.diag` checks the key pulses alone with a synthetic rider (it presses F9).
+
+## The game keeps moving for a few seconds after I stop pedalling
+
+Some trainers (the Decathlon D500 among them) do not measure power at the crank: they estimate it from the flywheel.
+After you stop, the wheel keeps turning and the trainer keeps reporting a power that fades over 10 s or more (about
+60 W falling to 0 in our measurements), and its cadence field stays frozen at the last value for several seconds.
+Pedalator can only see that power, so it cannot tell coasting from pedalling at once. What helps:
+
+- **No gas below** (Ride tab): raise it (for example to 35 W) to cut the low end of the tail. The default is 15 W.
+- **Smooth the gas** (Ride tab): turn it off if you want the gas to follow every reading; on, it also holds the gas for
+  0.8 s through short dips.
+- A trainer that measures power at the crank or pedals (most power-meter based setups) fades out much faster.

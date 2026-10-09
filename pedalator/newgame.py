@@ -123,7 +123,7 @@ pedalator --profile {id}{extra}
 ```
 
 {steps}
-Open the dashboard (http://127.0.0.1:8765) and the **Controls** tab to change buttons and keys while you ride. To
+Open the dashboard (http://127.0.0.1:2137) and the **Controls** tab to change buttons and keys while you ride. To
 share this setup: `pedalator profile export {id} --out {id}.json`.
 '''
 
@@ -164,6 +164,50 @@ def write_files(profile: dict, out: Path, slope: bool) -> list[Path]:
     return written
 
 
+def create(name: str, how: str, keys: dict[str, str], slope: bool, out: Path | None,
+           overwrite: bool = False) -> tuple[dict | None, list[Path], list[str]]:
+    """Make the profile and the files of a new game and save the profile. Shared by the CLI and the dashboard.
+
+    ``out`` is where the files go (default ``./<id>``). Returns ``(profile, files, errors)``; on errors nothing was
+    written (``profile`` is None when it could not even be made).
+    """
+    profile, errors = make_profile(name, how, keys)
+    if errors:
+        return None, [], errors
+    existing = {p["id"] for p in profiles.list_profiles() if p["user"] or p["builtin"]}
+    if profile["id"] in existing and not overwrite:
+        return profile, [], [f"a profile '{profile['id']}' already exists; pick another name or use --overwrite"]
+    files = write_files(profile, out or Path.cwd() / profile["id"], slope)
+    profiles.save_user(profile)
+    return profile, files, []
+
+
+def games_dir() -> Path:
+    """Where the dashboard puts the files of the games it makes (next to your profiles)."""
+    return profiles.user_dir().parent / "games"
+
+
+def game_files(gid: str) -> list[str]:
+    """The files of a game made in the dashboard that the editor may open: the generated ones, if they exist."""
+    if not profiles.ID_RE.match(gid or ""):
+        return []
+    folder = games_dir() / gid
+    return [n for n in (f"{gid}.json", "README.md", "listen.py", "mod_sketch.lua") if (folder / n).is_file()]
+
+
+def list_games() -> list[dict]:
+    root = games_dir()
+    if not root.is_dir():
+        return []
+    return [{"id": d.name, "files": game_files(d.name)} for d in sorted(root.iterdir())
+            if d.is_dir() and game_files(d.name)]
+
+
+def game_file_path(gid: str, name: str) -> Path | None:
+    """The path of an editable file, or None when the game or the name is not one we made (no path tricks possible)."""
+    return games_dir() / gid / name if name in game_files(gid) else None
+
+
 def main(args: argparse.Namespace) -> int:
     from .paths import user_data_dir
     profiles.set_user_dir((args.data_dir or user_data_dir()) / "profiles")
@@ -193,19 +237,16 @@ def main(args: argparse.Namespace) -> int:
                     print("  not a known key name; examples: KeyW, ArrowUp, Numpad8, Space")
     slope = args.slope if args.slope is not None else (
         ask("Can the game report the slope of the ground?", "no", ("yes", "no")) == "yes" if interactive and how == "udp" else False)
-    profile, errors = make_profile(name, how, keys)
+    profile, files, errors = create(name, how, keys, slope, args.out, args.overwrite)
     if errors:
-        print("cannot make a profile:")
-        for e in errors:
-            print(f"  - {e}")
+        if profile is None:
+            print("cannot make a profile:")
+            for e in errors:
+                print(f"  - {e}")
+        else:
+            print(errors[0])
         return 2
-    existing = {p["id"] for p in profiles.list_profiles() if p["user"] or p["builtin"]}
-    if profile["id"] in existing and not args.overwrite:
-        print(f"a profile '{profile['id']}' already exists; pick another name or use --overwrite")
-        return 2
-    out = args.out or Path.cwd() / profile["id"]
-    files = write_files(profile, out, slope)
-    profiles.save_user(profile)
+    out = files[0].parent
     print(f"\nProfile '{profile['id']}' saved. Files written to {out}:")
     for f in files:
         print(f"  {f.name}")

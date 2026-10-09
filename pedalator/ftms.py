@@ -4,7 +4,7 @@ from __future__ import annotations
 import struct
 import time
 
-from .state import log, state
+from .state import log, state, tap
 
 FTMS = "00001826-0000-1000-8000-00805f9b34fb"
 BIKE_DATA = "00002ad2-0000-1000-8000-00805f9b34fb"       # Indoor Bike Data (notifications)
@@ -65,6 +65,7 @@ def on_bike_data(_sender, data: bytearray) -> None:
         log(f"bike data parse error: {e}")
     state["raw_hex"] = bytes(data).hex(" ")
     state["t_packet"] = time.time()
+    tap("ble", state["power"])
 
 
 def on_control_point(_sender, data: bytearray) -> None:

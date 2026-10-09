@@ -238,9 +238,13 @@ def test_the_profile_is_chosen_from_the_target_and_the_options():
     assert choose_profile(parse("--target", "udp"))["id"] == "generic-udp"
 
 
+def test_a_profile_alone_brings_its_own_target():
+    assert choose_profile(parse("--profile", "morrowind"))["target"] == "openmw"
+
+
 def test_a_profile_for_another_target_or_an_unknown_one_stops_the_start():
     with pytest.raises(SystemExit, match="openmw"):
-        choose_profile(parse("--profile", "morrowind"))
+        choose_profile(parse("--profile", "morrowind", "--target", "keys"))
     with pytest.raises(SystemExit, match="no profile"):
         choose_profile(parse("--profile", "nope"))
 
@@ -291,3 +295,21 @@ def test_extended_keys_are_sent_with_the_extended_flag(monkeypatch):
     keys.key("left", True)
     keys.key("left", False)
     assert sent == [0x0008 | 0x0001, 0x0008 | 0x0001 | 0x0002]
+
+
+def test_the_smooth_gas_option_is_a_boolean_in_the_ride_settings():
+    base = {"id": "x", "name": "X", "target": "keys"}
+    ok, errors = profiles.validate({**base, "ride": {"smooth": False}})
+    assert not errors and ok["ride"]["smooth"] is False
+    _, errors = profiles.validate({**base, "ride": {"smooth": "yes"}})
+    assert any("smooth" in e for e in errors)
+
+
+def test_the_gas_floor_is_a_ride_setting_applied_with_the_profile():
+    base = {"id": "x", "name": "X", "target": "keys"}
+    ok, errors = profiles.validate({**base, "ride": {"floor": 40}})
+    assert not errors and ok["ride"]["floor"] == 40
+    _, errors = profiles.validate({**base, "ride": {"floor": 500}})
+    assert any("floor" in e for e in errors)
+    profiles.apply(ok)
+    assert state["floor"] == 40.0
