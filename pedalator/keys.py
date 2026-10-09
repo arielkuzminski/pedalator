@@ -58,7 +58,7 @@ def key(slot: str, down: bool) -> None:
     ctypes.windll.user32.SendInput(1, ctypes.byref(i), ctypes.sizeof(_IN))
 
 
-async def throttle_loop(floor: float = 15.0) -> None:
+async def throttle_loop(floor: float | None = None) -> None:
     """~20 Hz PWM of the throttle key: the share of time it is down is the rider's 'gas'."""
     period = 0.05
     fine = _fine_timer(True)               # without it Windows sleeps in 15.6 ms steps and the 50 ms period becomes 62.5 ms

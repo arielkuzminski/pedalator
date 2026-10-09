@@ -12,7 +12,7 @@ Open the **Controls** tab.
 - **Buttons**: for each Click button choose an action from the list, or *none*. The button you press lights up, so you can find it.
 - **Keys**: click a key slot, then press the key you want. Modifier keys such as Alt and the Windows key are not allowed, so a profile cannot trigger shortcuts.
 - **Options**: game-specific tuning (OpenMW: turn and look speed, run threshold, speed-attribute mode).
-- **Ride**: default mode, gain, difficulty, `pmax`, `ftp`, `smooth` (keep the gas through short dips of the power).
+- **Ride**: default mode, gain, difficulty, `pmax`, `ftp`, `smooth` (keep the gas through short dips of the power), `floor` (watts under which there is no gas).
 - **Save** overwrites your profile, **Save as…** makes a new one (a built-in is never changed), **Reset** returns to the saved state, **Export** downloads the JSON, **Import** loads a file and shows what is wrong with it, if anything.
 
 Unsaved edits work in the running session but are lost on restart; the Controls tab marks them as *unsaved*.

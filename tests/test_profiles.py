@@ -303,3 +303,13 @@ def test_the_smooth_gas_option_is_a_boolean_in_the_ride_settings():
     assert not errors and ok["ride"]["smooth"] is False
     _, errors = profiles.validate({**base, "ride": {"smooth": "yes"}})
     assert any("smooth" in e for e in errors)
+
+
+def test_the_gas_floor_is_a_ride_setting_applied_with_the_profile():
+    base = {"id": "x", "name": "X", "target": "keys"}
+    ok, errors = profiles.validate({**base, "ride": {"floor": 40}})
+    assert not errors and ok["ride"]["floor"] == 40
+    _, errors = profiles.validate({**base, "ride": {"floor": 500}})
+    assert any("floor" in e for e in errors)
+    profiles.apply(ok)
+    assert state["floor"] == 40.0

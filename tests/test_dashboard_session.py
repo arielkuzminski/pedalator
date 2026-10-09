@@ -165,3 +165,9 @@ def test_the_smooth_gas_option_is_set_from_the_page(dash):
     assert state["smooth"] is False
     assert dash.post("/smooth", {"smooth": "no"})[0] == 400
     assert state["smooth"] is False
+
+
+def test_the_gas_floor_is_set_from_the_page(dash):
+    assert dash.post("/floor", {"floor": 35})[0] == 200 and state["floor"] == 35.0
+    assert dash.post("/floor", {"floor": 999})[0] == 200 and state["floor"] == 150.0
+    assert dash.post("/floor", {"floor": "x"})[0] == 400

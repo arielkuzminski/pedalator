@@ -218,6 +218,7 @@
       <div class="kv" style="margin-top:12px">
         <div><span>Power gain: <b id="gv">x2.0</b> (how much game throttle each of your watts gives)</span><input id="gainr" type="range" min="0.5" max="4" step="0.1"></div>
         <div><span>Trainer grade: <b id="dv">40%</b> (how much of the game's hills you feel)</span><input id="diffr" type="range" min="0" max="1" step="0.05"></div>
+        <div><span>No gas below: <b id="fv">15 W</b> (a trainer still shows some power while its wheel spins down; raise this if you keep moving after you stop)</span><input id="floorr" type="range" min="0" max="100" step="5"></div>
       </div>
       <label class="checkrow" style="margin-top:12px"><input type="checkbox" id="smoothr"><span><b>Smooth the gas</b> <span class="hint" style="display:inline">Brief dips of your power (between pedal strokes, easing off) do not cut the gas; it lets go about a second after you really stop. Off: the gas follows every reading, so stopping pedalling stops at once.</span></span></label>
     </section>
@@ -390,6 +391,9 @@
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'No gas below (W)': 'Brak gazu poniżej (W)',
+  'No gas below:': 'Brak gazu poniżej:',
+  '(a trainer still shows some power while its wheel spins down; raise this if you keep moving after you stop)': '(trenażer pokazuje jeszcze trochę mocy, gdy jego koło wytraca obroty; podnieś, jeśli po zatrzymaniu nóg nadal się poruszasz)',
   'Smooth the gas': 'Wygładź gaz',
   'Brief dips of your power (between pedal strokes, easing off) do not cut the gas; it lets go about a second after you really stop. Off: the gas follows every reading, so stopping pedalling stops at once.': 'Krótkie spadki mocy (między obrotami korby, zwolnienie nacisku) nie przerywają gazu; puszcza on około sekundy po prawdziwym zatrzymaniu. Wyłączone: gaz podąża za każdym odczytem, więc przestanie pedałowania zatrzymuje od razu.',
   'Flow check': 'Test płynności',
@@ -796,6 +800,7 @@ function onState() {
 // ---- riding mode ----
 document.querySelectorAll('#presets button').forEach(b => b.onclick = () => post('/preset', { name: b.dataset.p }));
 $('gainr').oninput = e => post('/gain', { gain: +e.target.value });
+$('floorr').oninput = e => post('/floor', { floor: +e.target.value });
 $('smoothr').onchange = e => post('/smooth', { smooth: e.target.checked });
 $('diffr').oninput = e => post('/difficulty', { difficulty: +e.target.value });
 function showMode(s) {
@@ -803,6 +808,7 @@ function showMode(s) {
   $('gv').textContent = 'x' + s.gain.toFixed(1); $('dv').textContent = Math.round(s.difficulty * 100) + '%';
   if (document.activeElement !== $('gainr')) $('gainr').value = s.gain;
   if (document.activeElement !== $('smoothr')) $('smoothr').checked = !!s.smooth;
+  $('fv').textContent = Math.round(s.floor) + ' W'; if (document.activeElement !== $('floorr')) $('floorr').value = s.floor;
   if (document.activeElement !== $('diffr')) $('diffr').value = s.difficulty;
   $('modeinfo').textContent = t('full throttle from about {0} W', Math.round(s.pmax / s.gain));
 }
@@ -916,7 +922,7 @@ function renderControls() {
 }
 const OPTION_LABELS = { turn_rate: 'Turning speed', pitch_rate: 'Looking up/down speed', run_above: 'Run above this gas (0–1)', use_speed_attribute: 'Raise the Speed attribute with power', speed_boost: 'Speed attribute boost' };
 const MODE_LABELS = { easy: 'Easy', medium: 'Medium', real: 'Realistic' };
-const RIDE_LABELS = { gain: 'Power gain', difficulty: 'Share of the hills (0–1)', pmax: 'Full throttle at (W, gain ×1)', ftp: 'FTP (W)' };
+const RIDE_LABELS = { floor: 'No gas below (W)', gain: 'Power gain', difficulty: 'Share of the hills (0–1)', pmax: 'Full throttle at (W, gain ×1)', ftp: 'FTP (W)' };
 
 async function applyEdit() {                       // every change lands in the running program at once
   if (pfBusy) return; pfBusy = true;
@@ -961,7 +967,7 @@ $('pf-import').onchange = async e => {
   pfMsg(t('Imported and in use.'), 'ok'); await loadProfile();
 };
 $('pf-ride-now').onclick = () => {
-  pfEdit.ride = { gain: +S.gain.toFixed(2), difficulty: +S.difficulty.toFixed(2), pmax: S.pmax, ftp: S.ftp, smooth: !!S.smooth }; applyEdit();
+  pfEdit.ride = { gain: +S.gain.toFixed(2), difficulty: +S.difficulty.toFixed(2), pmax: S.pmax, ftp: S.ftp, smooth: !!S.smooth, floor: S.floor }; applyEdit();
 };
 function markPressed(raw) {                         // the Click buttons held right now light up their rows
   document.querySelectorAll('#pf-buttons tr').forEach(tr => tr.classList.toggle('pressed', raw.includes(tr.dataset.button)));

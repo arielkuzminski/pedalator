@@ -58,7 +58,8 @@ OPTIONS = {
                "speed_boost": (float, 0.0, 200.0, 60.0)},
     "keys": {}, "udp": {},
 }
-RIDE_FIELDS = {"gain": (0.5, 4.0), "difficulty": (0.0, 1.0), "pmax": (50.0, 1000.0), "ftp": (50.0, 600.0)}
+RIDE_FIELDS = {"gain": (0.5, 4.0), "difficulty": (0.0, 1.0), "pmax": (50.0, 1000.0), "ftp": (50.0, 600.0),
+               "floor": (0.0, 150.0)}
 
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,39}$")
 _user_dir: Path | None = None
@@ -318,6 +319,8 @@ def apply(profile: dict) -> None:
             state["pmax"] = ride["pmax"]
         if "ftp" in ride:
             state["ftp"] = int(ride["ftp"])
+        if "floor" in ride:
+            state["floor"] = float(ride["floor"])
         if "smooth" in ride:
             state["smooth"] = ride["smooth"]
 

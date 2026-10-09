@@ -74,3 +74,11 @@ def test_a_new_ride_forgets_the_gas_of_the_last_one():
     throttle_for(100)
     S.reset_session()
     assert throttle_for(0) == 0
+
+
+def test_the_gas_floor_is_a_setting():
+    state["smooth"] = False
+    assert throttle_for(20) > 0
+    state["floor"] = 35.0
+    assert throttle_for(20) == 0 and throttle_for(40) > 0
+    assert throttle_for(20, floor=10) > 0                 # an explicit floor still wins

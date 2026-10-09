@@ -271,6 +271,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             elif self.route == "/difficulty":
                 state["difficulty"] = max(0.0, min(1.0, float(body["difficulty"])))
                 state["preset"] = "custom"
+            elif self.route == "/floor":
+                state["floor"] = max(0.0, min(150.0, float(body["floor"])))
             elif self.route == "/smooth":
                 if not isinstance(body["smooth"], bool):
                     raise ValueError("smooth must be true or false")

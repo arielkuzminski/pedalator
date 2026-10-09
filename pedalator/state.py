@@ -23,6 +23,7 @@ state: dict = {
     "gain": 2.0,             # game throttle = rider power x gain / pmax  (easier riding)
     "difficulty": 0.4,       # share of the game's gradient the trainer is told
     "preset": "easy",
+    "floor": 15.0,           # watts under which there is no gas at all (a trainer's flywheel still shows some power after you stop)
     "smooth": True,          # keep the gas for SMOOTH_HOLD s when the power dips under the floor (pedal strokes, a soft patch)
     "target": "keys",                # which game target runs: keys | openmw | udp
     "profile": None, "profile_id": None,   # the active profile (see profiles.py)
@@ -114,12 +115,14 @@ def forget_gas() -> None:
     _last_gas.update(power=0.0, t=-1e9)
 
 
-def throttle_for(power: float, floor: float = 15.0) -> float:
-    """0..1 'gas' for a rider power: coasting below ``floor`` watts, full at pmax / gain.
+def throttle_for(power: float, floor: float | None = None) -> float:
+    """0..1 'gas' for a rider power: coasting below ``floor`` watts (``state['floor']``), full at pmax / gain.
 
     A trainer reports the power of the moment, which dips to nothing between pedal strokes and when you ease off.
     With ``state['smooth']`` a dip shorter than SMOOTH_HOLD keeps the last gas; a longer one (you stopped) lets go.
     """
+    if floor is None:
+        floor = state["floor"]
     if state["smooth"]:
         now = time.monotonic()
         if power >= floor:
