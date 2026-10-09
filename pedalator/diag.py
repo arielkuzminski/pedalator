@@ -195,7 +195,7 @@ def analyze(ev: dict, seconds: float, slot: str = "throttle", os_ok: bool = True
             latency.append(t - sent[j][0])
             j += 1
     downs = [t for t, d, _ in delivered if d]
-    os_gaps = [b - a for a, b in zip(downs, downs[1:], strict=False) if _value_at(duty, a) > 0 and _value_at(duty, b) > 0]
+    os_gaps = [b - a for a, b in zip(downs, downs[1:], strict=False) if _gas_wanted(duty, a, b)]
     out["os"] = {"available": os_ok, "events": len(delivered), "downs": len(downs),
                  "latency_p95_ms": round(pct(latency, 0.95) * 1000), "latency_max_ms": round(max(latency, default=0.0) * 1000),
                  "worst_gap_ms": round(max(os_gaps, default=0.0) * 1000)}

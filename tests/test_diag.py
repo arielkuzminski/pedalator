@@ -155,3 +155,8 @@ def test_the_windows_hook_sees_the_keys_sent_by_the_program():
         hook.stop()
         keys.BINDINGS.update(old)
     assert (True, True) in events and (False, True) in events
+
+
+def test_the_gap_between_key_events_ignores_a_pause_with_no_gas():
+    r = diag.analyze(ride(gas_off=[(4.0, 0.6)]), 10.0)
+    assert r["os"]["worst_gap_ms"] < 150                      # the 0.6 s silence was the rider's, not Windows'
