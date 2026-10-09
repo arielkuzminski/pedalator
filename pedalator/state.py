@@ -25,6 +25,7 @@ state: dict = {
     "target": "keys",                # which game target runs: keys | openmw | udp
     "profile": None, "profile_id": None,   # the active profile (see profiles.py)
     "notice": "", "t_notice": 0.0,   # a short message for the rider, e.g. "difficulty:60" (shown for 3 s)
+    "session": {"status": "idle"},   # the driver session (session.py): idle | starting | running | stopping | error
 }
 
 # riding mode -> (power gain, share of the game's gradient sent to the trainer)
@@ -35,7 +36,22 @@ MAX_GRADE = 15.0             # the D500 simulates up to 15 %; most smart trainer
 history: collections.deque = collections.deque(maxlen=120)   # rider power, one sample a second
 log_lines: collections.deque = collections.deque(maxlen=80)
 stats = {"sum": 0.0, "n": 0, "max": 0}
-t_start = time.time()
+t_start: float | None = None      # when the running session began (None: no session, so no elapsed time)
+
+
+def reset_session() -> None:
+    """Forget the last ride: live values, history and statistics. Called when a session starts and when it ends."""
+    state.update(power=0, cadence=0.0, speed=0.0, distance=0, resistance=None, hr=None, grade=0.0, game_grade=0.0,
+                 manual_grade=0.0, mode="game", connected=False, trainer_name="-", simulate=False,
+                 t_packet=0.0, t_udp=0.0, t_cp=0.0, raw_hex="", cp_last="-", game_speed=0.0,
+                 buttons=[], raw=[], t_buttons=0.0, click_connected=False, click_name="-", notice="", t_notice=0.0)
+    history.clear()
+    stats.update(sum=0.0, n=0, max=0)
+
+
+def start_clock(running: bool) -> None:
+    global t_start
+    t_start = time.time() if running else None
 
 
 def log(msg: str) -> None:
@@ -93,6 +109,6 @@ def snapshot() -> dict:
     s["log"] = list(log_lines)
     s["avg_power"] = round(stats["sum"] / stats["n"]) if stats["n"] else 0
     s["max_power"] = stats["max"]
-    s["elapsed"] = int(now - t_start)
+    s["elapsed"] = int(now - t_start) if t_start else 0
     s["distance"] = int(s["distance"])
     return s

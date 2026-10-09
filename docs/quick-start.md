@@ -20,6 +20,14 @@ pip install -r requirements.txt
 
 Everything below is run from this folder with `python -m pedalator ...`.
 
+## 0. The easy way: the Start page
+
+```bash
+python -m pedalator
+```
+
+With no options, Pedalator opens only the dashboard (<http://127.0.0.1:8765>) on its **Start** tab. Choose a game (or make one with *New game*), say how you ride (a simulated rider, this PC's Bluetooth or a phone; the Click automatic, on the PC, on the phone or off) and press **Start riding**. Only then are the trainer, the Click and the game connected. **Stop** (on the Start page or in the header) lets everything go again, so you can pick another game without restarting. The sections below do the same from the command line: giving a game or a rider (`--target`, `--profile`, `--simulate`, `--remote`, `--keys`…) starts riding at once, as before; `--launcher` forces the Start page.
+
 ## 1. Try it without hardware
 
 ```bash
@@ -33,7 +41,7 @@ Open <http://127.0.0.1:8765>. A made-up rider sprints and rests every 45 seconds
 Close every other app that uses the trainer (Zwift, a phone app, a head unit) — most trainers accept only one connection.
 
 ```bash
-python -m pedalator
+python -m pedalator --target keys
 ```
 
 It scans for a trainer for 8 seconds and connects; if a **Zwift Click** is awake nearby it connects to that too (`--click off` to skip it). The dashboard's lights turn green and the power gauge moves when you pedal.

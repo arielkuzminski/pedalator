@@ -41,7 +41,7 @@
 
 Pedalator is **alpha software**: it works for its author every day, but expect rough edges. Please open an issue if something does not work for you.
 
-**Next up** ([roadmap](docs/roadmap.md#next-up)): a dashboard version of the new-game wizard, and hardware tests of the direct Bluetooth path.
+**Next up** ([roadmap](docs/roadmap.md#next-up)): hardware tests of the direct Bluetooth path.
 
 ## How it works
 
@@ -58,7 +58,7 @@ flowchart LR
     P -. Bluetooth .- C
 ```
 
-The **bridge** (`python -m pedalator`) is the middle: it reads the trainer, decides what the game should get, and sends the game's gradient back to the trainer. How it talks to a game depends on the game — see [Architecture](docs/architecture.md).
+The **bridge** (`python -m pedalator`, which opens a Start page where you choose the game and start riding) is the middle: it reads the trainer, decides what the game should get, and sends the game's gradient back to the trainer. How it talks to a game depends on the game — see [Architecture](docs/architecture.md).
 
 ## Quick start
 

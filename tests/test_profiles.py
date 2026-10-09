@@ -238,9 +238,13 @@ def test_the_profile_is_chosen_from_the_target_and_the_options():
     assert choose_profile(parse("--target", "udp"))["id"] == "generic-udp"
 
 
+def test_a_profile_alone_brings_its_own_target():
+    assert choose_profile(parse("--profile", "morrowind"))["target"] == "openmw"
+
+
 def test_a_profile_for_another_target_or_an_unknown_one_stops_the_start():
     with pytest.raises(SystemExit, match="openmw"):
-        choose_profile(parse("--profile", "morrowind"))
+        choose_profile(parse("--profile", "morrowind", "--target", "keys"))
     with pytest.raises(SystemExit, match="no profile"):
         choose_profile(parse("--profile", "nope"))
 

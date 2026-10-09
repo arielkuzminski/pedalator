@@ -5,6 +5,9 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- **Start page (launcher):** `pedalator` with no game or rider now opens only the dashboard. Choose a game, pick the trainer (simulated, this PC's Bluetooth, phone) and the Click, press **Start riding**; **Stop** releases the trainer, the Click, the game's port and the phone servers so another game can be started without restarting. Giving a game or a rider on the command line still starts riding at once; `--launcher` forces the Start page. New `pedalator/session.py`; `--target` no longer defaults to `keys` (a profile alone now brings its own target).
+  The Start page explains what to do for each game (numbered steps) and can add the OpenMW mod for you with one button, showing first what will change in `openmw.cfg` (a backup is made).
+- **Game tab in the dashboard:** the new-game wizard as a form, a live test panel (gas, turning, Click buttons, the UDP packet, a key tester) and an editor for the generated files. See [docs/new-game.md](docs/new-game.md).
 - **`pedalator new-game`:** a wizard that sets up a new game: a saved profile, a README with the steps and, for UDP games, a listener and a Lua sketch. See [docs/new-game.md](docs/new-game.md).
 - **Profiles:** one JSON file per game or setup holds the button map, the keys, the ride defaults and game options. A new **Controls** tab in the dashboard remaps buttons and keys live and saves, exports and imports profiles; `--profile` and `pedalator profile list|show|export|import|delete` on the command line; the OpenMW mod reads its tuning from a config file. See [docs/profiles.md](docs/profiles.md).
 - The dashboard now refuses requests with a foreign `Host` header and non-JSON `POST`s, so another web page cannot drive it.
@@ -16,7 +19,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - **Hybrid mode:** `--trainer pc|phone` and `--click pc|phone|off` choose who reads the trainer and the Click (`--remote` stays as the shorthand). The phone page hides what the PC reads itself, and the PC refuses data it does not want.
 
 ### Planned (see [docs/roadmap.md](docs/roadmap.md#next-up))
-- Dashboard version of the wizard with a test panel.
+- A socket-less (file and log) template for the wizard.
 
 ## [0.1.0] — first public release
 

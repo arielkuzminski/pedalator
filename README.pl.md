@@ -41,7 +41,7 @@
 
 Pedalator to **oprogramowanie w wersji alfa**: autorowi działa na co dzień, ale spodziewaj się zadziorów. Jeśli coś nie działa, otwórz zgłoszenie.
 
-**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): wersja kreatora nowej gry w panelu oraz testy bezpośredniego Bluetooth na sprzęcie.
+**Najbliższe plany** ([roadmapa](docs/roadmap.md#next-up)): testy bezpośredniego Bluetooth na sprzęcie.
 
 ## Jak to działa
 

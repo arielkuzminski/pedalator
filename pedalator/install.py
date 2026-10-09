@@ -43,10 +43,11 @@ def update_openmw_cfg(text: str, mod_dir: Path) -> tuple[str, list[str]]:
     return nl.join(lines) + nl, changes
 
 
-def install_openmw(user_dir: Path | None, dest: Path | None, dry_run: bool = False) -> int:
+def install_openmw(user_dir: Path | None, dest: Path | None, dry_run: bool = False, say=print) -> int:
+    """Copy the mod and enable it in openmw.cfg. ``say`` receives each line of the report (the dashboard shows them)."""
     user_dir = user_dir or openmw_user_dir()
     if not user_dir or not (user_dir / "openmw.cfg").is_file():
-        print("Cannot find your openmw.cfg. Start OpenMW (or its launcher) once, or pass --user-dir.")
+        say("Cannot find your openmw.cfg. Start OpenMW (or its launcher) once, or pass --user-dir.")
         return 2
     cfg = user_dir / "openmw.cfg"
     dest = dest or (user_dir / "mods" / OPENMW_MOD)
@@ -54,20 +55,20 @@ def install_openmw(user_dir: Path | None, dest: Path | None, dry_run: bool = Fal
     with cfg.open(encoding="utf-8", errors="replace", newline="") as fh:      # keep CRLF as it is
         text = fh.read()
     new, changes = update_openmw_cfg(text, dest)
-    print(f"mod folder : {dest}")
-    print(f"config     : {cfg}")
+    say(f"mod folder : {dest}")
+    say(f"config     : {cfg}")
     for c in changes:
-        print(f"  - {c}")
+        say(f"  - {c}")
     if dry_run:
-        print("(dry run: nothing was written)")
+        say("(dry run: nothing was written)")
         return 0
     shutil.copytree(src, dest, dirs_exist_ok=True)
     if changes:
         backup = cfg.with_name(f"openmw.cfg.bak-pedalator-{time.strftime('%Y%m%d-%H%M%S')}")
         shutil.copy2(cfg, backup)
         cfg.write_text(new, encoding="utf-8", newline="")
-        print(f"backup     : {backup}")
-    print("Done. Start OpenMW and load a save; then run:  pedalator --target openmw --remote  (or without --remote)")
+        say(f"backup     : {backup}")
+    say("Done. Start OpenMW and load a save; then run:  pedalator --target openmw --remote  (or without --remote)")
     return 0
 
 

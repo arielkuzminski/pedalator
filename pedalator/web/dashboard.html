@@ -107,6 +107,25 @@
   #pf-msg { margin-top: 10px; font-size: 14px; } #pf-msg.err { color: #ff8a9a; } #pf-msg.ok { color: var(--ok); }
   .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
   .c-wide { grid-column: span 12; } .c-half { grid-column: span 6; } @media (max-width: 900px) { .c-half { grid-column: span 12; } }
+  .err { color: #ff8a9a; white-space: pre-line; } .ok { color: var(--ok); }
+  #gm-msg, #ed-msg, #st-msg { margin-top: 10px; font-size: 14px; }
+  .hint { color: var(--dim); font-size: 13px; margin-top: 6px; } .hint.okc { color: var(--ok); } .hint.errc { color: #ff8a9a; }
+  .field { margin: 12px 0; } .flabel { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .checkrow { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .seg { flex-wrap: wrap; } .seg button:disabled { opacity: .4; cursor: default; }
+  .gamegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .gcard { background: #0e1424; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; text-align: left; color: var(--text);
+           font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .gcard:hover:not(:disabled) { border-color: var(--accent); } .gcard.sel { border-color: var(--accent); box-shadow: 0 0 0 2px #6c8cff55; background: #141c33; }
+  .gcard:disabled { cursor: default; } .gname { font-weight: 700; }
+  .badge { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: #1b2236; color: var(--dim); border: 1px solid var(--line); }
+  .locked { opacity: .55; } .big-btn { padding: 12px 28px; font-size: 17px; font-weight: 700; }
+  #view-ride.idle .grid { opacity: .4; } .sk { color: var(--dim); }
+  button:focus-visible, .gcard:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ol.steps { padding-left: 22px; margin: 0 0 14px; line-height: 1.7; } ol.steps li.done { color: var(--ok); }
+  .setup { border: 1px solid var(--line); border-left: 3px solid var(--z4); border-radius: 10px; padding: 12px 14px; margin-top: 12px; background: #0e1424; }
+  .setup b { display: block; margin-bottom: 4px; }
+  .sesschip { display: flex; align-items: center; gap: 8px; }
   #offline small { display: block; color: var(--dim); font-size: 14px; margin-top: 8px; }
 </style>
 </head>
@@ -116,6 +135,7 @@
 <div class="wrap">
   <header>
     <h1>Pedal<span>ator</span></h1>
+    <div class="pill sesschip" id="sess"><i class="dot" id="d-sess"></i><span id="t-sess">…</span><button class="btn" id="sess-stop" style="display:none;padding:2px 10px">Stop</button></div>
     <div class="pills">
       <div class="pill"><i class="dot" id="d-ble"></i><span id="t-ble">trainer: …</span></div>
       <div class="pill"><i class="dot" id="d-game"></i><span id="t-game">game: …</span></div>
@@ -124,9 +144,10 @@
     </div>
   </header>
 
-  <nav class="tabs"><button id="tab-ride" class="on" data-tab="ride">Ride</button><button id="tab-controls" data-tab="controls">Controls</button></nav>
+  <nav class="tabs"><button id="tab-start" data-tab="start">Start</button><button id="tab-ride" class="on" data-tab="ride">Ride</button><button id="tab-controls" data-tab="controls">Controls</button><button id="tab-game" data-tab="game">Game</button></nav>
 
   <div id="view-ride">
+  <div id="ride-idle" class="card" style="display:none;margin-bottom:14px"><div class="row"><div><b>No ride is running.</b><div class="hint">Choose a game and start riding on the Start tab.</div></div><button class="btn primary" id="ride-idle-go">Go to Start</button></div></div>
   <div class="grid">
     <section class="card c-power">
       <h2>Power</h2>
@@ -217,6 +238,47 @@
   </div>
   </div>
 
+  <div id="view-start" style="display:none">
+  <div class="grid">
+    <section class="card c-wide" id="st-step1">
+      <h2>1 · Choose a game</h2>
+      <div class="gamegrid" id="st-games" role="group" aria-label="Games"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn" id="st-new">+ New game</button>
+        <button class="btn" id="st-edit">Edit its controls</button>
+        <label class="btn" for="st-import">Import a profile</label><input type="file" id="st-import" accept=".json,application/json" hidden>
+      </div>
+    </section>
+
+    <section class="card c-half" id="st-step2">
+      <h2>2 · How do you ride?</h2>
+      <div class="field"><div class="flabel">Trainer</div>
+        <div class="seg" id="st-trainer" role="group" aria-label="Trainer">
+          <button data-v="simulate">Simulated</button><button data-v="pc">This PC's Bluetooth</button><button data-v="phone">Phone</button></div>
+        <div class="hint" id="st-trainer-hint"></div></div>
+      <div class="field"><div class="flabel">Zwift Click</div>
+        <div class="seg" id="st-click" role="group" aria-label="Zwift Click">
+          <button data-v="auto">Automatic</button><button data-v="pc">This PC</button><button data-v="phone">Phone</button><button data-v="off">None</button></div>
+        <div class="hint" id="st-click-hint"></div></div>
+      <div id="st-extra"></div>
+    </section>
+
+    <section class="card c-half" id="st-step3">
+      <h2>3 · Go</h2>
+      <div class="flabel">What to do</div>
+      <ol class="steps" id="st-steps"></ol>
+      <div id="st-summary" style="font-size:16px;line-height:1.6"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+        <button class="btn primary big-btn" id="st-go">Start riding</button>
+        <button class="btn big-btn" id="st-stop" style="display:none">Stop the ride</button>
+      </div>
+      <div class="hint errc" id="st-why"></div>
+      <div id="st-msg" role="alert"></div>
+      <div class="hint" style="margin-top:12px">Stopping lets go of the trainer, the Click and the game's port, so you can pick another game without restarting Pedalator.</div>
+    </section>
+  </div>
+  </div>
+
   <div id="view-controls" style="display:none">
   <div class="grid">
     <section class="card c-wide">
@@ -261,12 +323,154 @@
     </div>
   </div>
   </div>
+  <div id="view-game" style="display:none">
+  <div class="grid">
+    <section class="card c-half">
+      <h2>New game</h2>
+      <div class="opt"><span>Name of the game</span><input type="text" id="gm-name" maxlength="60" placeholder="e.g. Luanti" style="width:180px"></div>
+      <div class="opt"><span>How can Pedalator reach it?</span><select id="gm-how"><option value="keys">The game reads the keyboard</option><option value="udp">The game has a mod/script that can use UDP</option></select></div>
+      <div id="gm-keys-box"><table class="map" id="gm-keys"></table>
+        <div style="color:var(--dim);font-size:12px;margin:6px 0 8px">Click a key, then press the key you want. Esc cancels.</div></div>
+      <div class="opt" id="gm-slope-row" style="display:none"><span>The game can report the slope of the ground</span><input type="checkbox" id="gm-slope"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+        <button class="btn primary" id="gm-create">Create</button>
+        <label id="gm-over-row" style="display:none;align-self:center"><input type="checkbox" id="gm-over"> replace the game with this name</label>
+      </div>
+      <div id="gm-msg"></div>
+      <div id="gm-result" style="display:none;margin-top:10px">
+        <div id="gm-files" style="color:var(--dim);font-size:13px"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+          <button class="btn" id="gm-use">Use this profile now</button><button class="btn" id="gm-open">Open the folder</button><button class="btn" id="gm-edit">Edit the files</button>
+        </div>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:10px">Same as the command <code>pedalator new-game</code>. The files are saved in your Pedalator data folder.</div>
+    </section>
+
+    <section class="card c-half">
+      <h2>Test panel</h2>
+      <div style="color:var(--dim);font-size:12px;margin-bottom:8px">What Pedalator sends to the game right now. Pedal, or press buttons on your Click.</div>
+      <div class="opt"><span>Gas</span><span style="flex:1;max-width:160px;height:10px;background:#2a2f3a;border-radius:5px;overflow:hidden;display:inline-block"><span id="tp-gas-bar" style="display:block;height:100%;width:0;background:var(--z3)"></span></span><b id="tp-gas">0 %</b></div>
+      <div class="opt"><span>Turning</span><b id="tp-turn">—</b></div>
+      <div class="opt"><span>Looking</span><b id="tp-look">—</b></div>
+      <div class="opt"><span>Click buttons held</span><b id="tp-buttons">—</b></div>
+      <details open><summary>Packet sent to a UDP game</summary><pre id="tp-packet">-</pre></details>
+      <div style="margin-top:10px"><button class="btn keycap" id="tp-key">Test a key</button> <span id="tp-keyout" style="color:var(--dim);font-size:13px"></span></div>
+    </section>
+
+    <section class="card c-wide">
+      <h2>Edit the files of a game</h2>
+      <div class="row">
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><select id="ed-game"></select><select id="ed-file"></select></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn primary" id="ed-save">Save</button><button class="btn" id="ed-revert">Revert</button></div>
+      </div>
+      <textarea id="ed-text" spellcheck="false" style="width:100%;min-height:260px;margin-top:10px;font-family:ui-monospace,Consolas,monospace;font-size:13px;background:#0f1115;color:inherit;border:1px solid #2a2f3a;border-radius:8px;padding:10px;box-sizing:border-box"></textarea>
+      <div id="ed-msg"></div>
+      <div id="ed-empty" style="color:var(--dim)">No games made here yet: create one above.</div>
+    </section>
+  </div>
+  </div>
 </div>
 
 <script>
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  '✓ The Pedalator mod is installed in OpenMW: {0}': '✓ Mod Pedalatora jest zainstalowany w OpenMW: {0}',
+  '✗ OpenMW\'s settings (openmw.cfg) were not found. Start OpenMW or its launcher once so that it creates them, then reload this page.': '✗ Nie znaleziono ustawień OpenMW (openmw.cfg). Uruchom raz OpenMW lub jego launcher, żeby je utworzył, i odśwież tę stronę.',
+  'One-time setup: add the Pedalator mod to OpenMW': 'Jednorazowa konfiguracja: dodaj mod Pedalatora do OpenMW',
+  'The mod passes your pedalling to the game and the slope of the ground back to the trainer. One click copies it and switches it on in your openmw.cfg (a backup of that file is made first).': 'Mod przekazuje twoje pedałowanie do gry, a nachylenie terenu z powrotem do trenażera. Jedno kliknięcie kopiuje go i włącza w twoim openmw.cfg (najpierw powstaje kopia zapasowa tego pliku).',
+  'What exactly will change': 'Co dokładnie się zmieni',
+  'Install the mod': 'Zainstaluj mod',
+  'The installation failed': 'Instalacja się nie udała',
+  '✓ Installed. Now start OpenMW, load a save, then press “Start riding”.': '✓ Zainstalowano. Teraz uruchom OpenMW, wczytaj zapis i naciśnij „Zacznij jazdę”.',
+  'What to do': 'Co robić',
+  'Add the Pedalator mod to OpenMW (once; the button in step 2)': 'Dodaj mod Pedalatora do OpenMW (raz; przycisk w kroku 2)',
+  'Start OpenMW and load a save': 'Uruchom OpenMW i wczytaj zapis',
+  'Press “Start riding” here and pedal': 'Naciśnij tutaj „Zacznij jazdę” i pedałuj',
+  'Press “Start riding” here': 'Naciśnij tutaj „Zacznij jazdę”',
+  'Click into the game’s window so that it is in front': 'Kliknij w okno gry, żeby było na wierzchu',
+  'Pedal: Pedalator presses the keys set on the Controls tab': 'Pedałuj: Pedalator wciska klawisze ustawione w zakładce Sterowanie',
+  'Run the game’s mod or script (the README in its folder, on the Game tab, explains how)': 'Uruchom mod lub skrypt gry (README w jej folderze, na zakładce Gra, opisuje jak)',
+  'Pedal: Pedalator sends your power to the game': 'Pedałuj: Pedalator wysyła twoją moc do gry',
+  'Choose a game first.': 'Najpierw wybierz grę.',
+  'Add the mod to OpenMW first (step 2).': 'Najpierw dodaj mod do OpenMW (krok 2).',
+  '1 · Choose a game': '1 · Wybierz grę',
+  '+ New game': '+ Nowa gra',
+  'Edit its controls': 'Edytuj sterowanie',
+  'Import a profile': 'Importuj profil',
+  '2 · How do you ride?': '2 · Jak jedziesz?',
+  'Simulated': 'Symulowany',
+  'This PC\'s Bluetooth': 'Bluetooth tego komputera',
+  'Phone': 'Telefon',
+  'Zwift Click': 'Zwift Click',
+  'Automatic': 'Automatycznie',
+  'This PC': 'Ten komputer',
+  'None': 'Brak',
+  '3 · Go': '3 · Jedziemy',
+  'Start riding': 'Zacznij jazdę',
+  'Stop the ride': 'Zakończ jazdę',
+  'Stop': 'Zakończ',
+  'Stopping lets go of the trainer, the Click and the game\'s port, so you can pick another game without restarting Pedalator.': 'Zakończenie zwalnia trenażer, Clicka i port gry, więc możesz wybrać inną grę bez restartu Pedalatora.',
+  'No ride is running.': 'Żadna jazda nie trwa.',
+  'Choose a game and start riding on the Start tab.': 'Wybierz grę i zacznij jazdę na zakładce Start.',
+  'Go to Start': 'Przejdź do Startu',
+  'Keyboard': 'Klawiatura',
+  'UDP': 'UDP',
+  'OpenMW': 'OpenMW',
+  'No games yet. Create the first one with “New game”.': 'Brak gier. Utwórz pierwszą przyciskiem „Nowa gra”.',
+  'A made-up rider: try a game without a trainer.': 'Wymyślony kolarz: wypróbuj grę bez trenażera.',
+  'Needs a Bluetooth 5 adapter. No adapter? Pick Phone or Simulated.': 'Wymaga adaptera Bluetooth 5. Bez adaptera wybierz Telefon albo Symulowany.',
+  'A phone or laptop with Web Bluetooth reads the trainer (see the phone page address in the log).': 'Trenażer czyta telefon lub laptop z Web Bluetooth (adres strony telefonu jest w logu).',
+  'Follows the trainer: this PC for a Bluetooth trainer, the phone for a phone.': 'Tak jak trenażer: komputer przy Bluetooth komputera, telefon przy telefonie.',
+  'The PC reads the Click over Bluetooth.': 'Komputer czyta Clicka przez Bluetooth.',
+  'The phone or laptop reads the Click, the PC the trainer.': 'Clicka czyta telefon lub laptop, trenażer komputer.',
+  'Without the Click: no buttons, no hill difficulty buttons.': 'Bez Clicka: brak przycisków, także zmiany trudności górek.',
+  '✓ OpenMW mod found: {0}': '✓ Znaleziono mod OpenMW: {0}',
+  '✗ The OpenMW mod was not found. Install it first: pedalator install openmw': '✗ Nie znaleziono moda OpenMW. Najpierw go zainstaluj: pedalator install openmw',
+  'Send to (HOST:PORT)': 'Wysyłaj do (HOST:PORT)',
+  'Press keys in the window in front (the game must be in front)': 'Wciskaj klawisze w oknie na wierzchu (gra musi być na wierzchu)',
+  'Starting…': 'Uruchamianie…',
+  'Stopping…': 'Zatrzymywanie…',
+  'Something stopped working: {0}': 'Coś przestało działać: {0}',
+  'Imported.': 'Zaimportowano.',
+  'No ride': 'Brak jazdy',
+  'Problem': 'Problem',
+  'Riding: {0}': 'Jazda: {0}',
+  'needs --target {0}': 'wymaga --target {0}',
+  'New game': 'Nowa gra',
+  'Name of the game': 'Nazwa gry',
+  'e.g. Luanti': 'np. Luanti',
+  'How can Pedalator reach it?': 'Jak Pedalator ma dotrzeć do gry?',
+  'The game reads the keyboard': 'Gra czyta klawiaturę',
+  'The game has a mod/script that can use UDP': 'Gra ma mod/skrypt, który może używać UDP',
+  'The game can report the slope of the ground': 'Gra potrafi podać nachylenie terenu',
+  'Create': 'Utwórz',
+  'replace the game with this name': 'zastąp grę o tej nazwie',
+  'Use this profile now': 'Użyj tego profilu teraz',
+  'Open the folder': 'Otwórz folder',
+  'Edit the files': 'Edytuj pliki',
+  'Same as the command': 'To samo co polecenie',
+  '. The files are saved in your Pedalator data folder.': '. Pliki trafiają do folderu danych Pedalatora.',
+  'Test panel': 'Panel testowy',
+  'What Pedalator sends to the game right now. Pedal, or press buttons on your Click.': 'Co Pedalator wysyła teraz do gry. Pedałuj albo naciskaj przyciski Clicka.',
+  'Gas': 'Gaz',
+  'Turning': 'Skręt',
+  'Looking': 'Rozglądanie',
+  'Click buttons held': 'Wciśnięte przyciski Clicka',
+  'Packet sent to a UDP game': 'Pakiet wysyłany do gry UDP',
+  'Test a key': 'Sprawdź klawisz',
+  'Edit the files of a game': 'Edycja plików gry',
+  'Revert': 'Cofnij',
+  'No games made here yet: create one above.': 'Nie ma jeszcze gier utworzonych tutaj: utwórz pierwszą powyżej.',
+  'left': 'w lewo',
+  'right': 'w prawo',
+  'up': 'w górę',
+  'down': 'w dół',
+  'Game “{0}” created.': 'Gra „{0}” utworzona.',
+  'Game “{0}” created. To ride it, start Pedalator with --profile {0}.': 'Gra „{0}” utworzona. Aby jechać, uruchom Pedalatora z --profile {0}.',
+  'In use.': 'W użyciu.',
+  '{0} is the key “{1}”': '{0} to klawisz „{1}”',
+  '{0}: Pedalator cannot press this key': '{0}: Pedalator nie potrafi wcisnąć tego klawisza',
   'Ride': 'Jazda',
   'Controls': 'Sterowanie',
   'Profile': 'Profil',
@@ -403,6 +607,7 @@ const ZN = ['Z1 RECOVERY', 'Z2 ENDURANCE', 'Z3 TEMPO', 'Z4 THRESHOLD', 'Z5 VO2',
 const ZB = [0.55, 0.75, 0.90, 1.05, 1.20];           // zone limits, fraction of FTP
 const zoneOf = (w, ftp) => { const f = w / ftp; let z = 0; while (z < 5 && f >= ZB[z]) z++; return z; };
 
+let tabChosen = !!location.hash;
 let S = null, shown = { p: 0, cad: 0, spd: 0, grade: 0 }, peak = 0, peakAt = 0, gaugeFtp = 0, lastMsg = 0;
 
 // ---- gauge geometry (semi circle, 180 -> 360 deg) ----
@@ -504,6 +709,8 @@ function frame() {
 
 function onState() {
   const s = S, ok = s.connected;
+  renderSessionChip();
+  if (!tabChosen) { tabChosen = true; showTab(sess().status === 'idle' ? 'start' : 'ride'); }
   $('d-ble').className = 'dot' + (ok ? ' on' : ''); $('t-ble').textContent = ok ? t('trainer: {0}', s.trainer_name) : t('trainer: none');
   const gameOn = s.age_udp !== null && s.age_udp < 3;
   $('d-game').className = 'dot' + (gameOn ? ' on' : (s.age_udp !== null ? ' warn' : ''));
@@ -530,6 +737,7 @@ function onState() {
   lg.textContent = s.log.join('\n') || '-'; if (atEnd) lg.scrollTop = lg.scrollHeight;
   showMode(s);
   if ($('view-controls').style.display !== 'none') markPressed(s.raw || []);
+  if ($('view-game').style.display !== 'none') updateTestPanel(s);
   const [nk, nv] = (s.notice || '').split(':');
   $('toast').textContent = nk === 'difficulty' ? t('Hills felt: {0} %', nv) : '';
   $('toast').classList.toggle('show', nk === 'difficulty');
@@ -564,10 +772,15 @@ setInterval(() => { if (lastMsg && performance.now() - lastMsg > 3000) $('offlin
 
 // ---- tabs ----
 function showTab(name) {
+  $('view-start').style.display = name === 'start' ? '' : 'none';
   $('view-ride').style.display = name === 'ride' ? '' : 'none';
   $('view-controls').style.display = name === 'controls' ? '' : 'none';
+  $('view-game').style.display = name === 'game' ? '' : 'none';
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
-  if (name === 'controls') { loadProfile(); history.replaceState(null, '', '#controls'); } else history.replaceState(null, '', location.pathname + location.search);
+  if (name === 'start') { loadStart(); history.replaceState(null, '', '#start'); }
+  else if (name === 'controls') { loadProfile(); history.replaceState(null, '', '#controls'); }
+  else if (name === 'game') { loadProfile().then(renderGameKeys); loadGames(); history.replaceState(null, '', '#game'); }
+  else history.replaceState(null, '', location.pathname + location.search);
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 
@@ -586,8 +799,9 @@ async function loadProfile(keepEdit) {
   PF = r.data; if (!keepEdit) pfEdit = JSON.parse(JSON.stringify(PF.profile));
   const list = (await api('/profiles')).data.profiles || [];
   const sel = $('pf-select'); sel.innerHTML = '';
-  for (const p of list.filter(p => p.target === PF.target)) {
+  for (const p of list) {                          // profiles of other targets are listed too, greyed out
     const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + (p.user ? ' ★' : '');
+    if (PF.session_active && p.target !== PF.target) { o.disabled = true; o.textContent += ' — ' + t('needs --target {0}', p.target); }
     if (p.id === PF.profile.id) o.selected = true; sel.appendChild(o);
   }
   renderControls();
@@ -701,7 +915,246 @@ $('pf-ride-now').onclick = () => {
 function markPressed(raw) {                         // the Click buttons held right now light up their rows
   document.querySelectorAll('#pf-buttons tr').forEach(tr => tr.classList.toggle('pressed', raw.includes(tr.dataset.button)));
 }
+// ---- Game: the new-game wizard, the test panel and the editor of the generated files ----
+const GM_SLOTS = [['throttle', 'Throttle (pedalling)'], ['brake', 'Brake'], ['left', 'Steer left'], ['right', 'Steer right']];
+const GM_DEFAULT = { throttle: 'KeyW', brake: 'KeyS', left: 'KeyA', right: 'KeyD' };
+let gmKeys = { ...GM_DEFAULT }, gmCap = null, gmMade = null, tpCap = false, edGames = [];
+const msgBox = (id, text, kind) => { $(id).textContent = text || ''; $(id).className = kind || ''; $(id).style.whiteSpace = 'pre-line'; };
+const gmErrors = (id, list) => msgBox(id, (list || []).map(e => '• ' + e).join('\n'), 'err');
+const keyLabel = c => (PF && PF.key_labels && PF.key_labels[c]) || c;
+const keyKnown = c => !!(PF && PF.key_labels && PF.key_labels[c]);
+
+function renderGameKeys() {
+  const kt = $('gm-keys'); kt.innerHTML = '';
+  for (const [slot, label] of GM_SLOTS) {
+    const tr = document.createElement('tr'), td1 = document.createElement('td'), td2 = document.createElement('td'), b = document.createElement('button');
+    td1.textContent = t(label);
+    b.className = 'btn keycap' + (gmCap === slot ? ' capturing' : '');
+    b.textContent = gmCap === slot ? t('press a key…') : keyLabel(gmKeys[slot]);
+    b.onclick = () => { gmCap = gmCap === slot ? null : slot; tpCap = false; resetTestKey(); renderGameKeys(); };
+    td2.appendChild(b); tr.appendChild(td1); tr.appendChild(td2); kt.appendChild(tr);
+  }
+  $('gm-keys-box').style.display = $('gm-how').value === 'keys' ? '' : 'none';
+  $('gm-slope-row').style.display = $('gm-how').value === 'udp' ? '' : 'none';
+}
+function resetTestKey() { $('tp-key').classList.toggle('capturing', tpCap); $('tp-key').textContent = tpCap ? t('press a key…') : t('Test a key'); }
+$('gm-how').onchange = renderGameKeys;
+document.addEventListener('keydown', e => {
+  if (!gmCap && !tpCap) return;
+  e.preventDefault();
+  if (tpCap) {                                         // key tester: which name does a key have, can Pedalator press it?
+    tpCap = false; resetTestKey();
+    $('tp-keyout').textContent = e.code === 'Escape' ? '' : keyKnown(e.code) ? t('{0} is the key “{1}”', keyLabel(e.code), e.code) : t('{0}: Pedalator cannot press this key', e.code);
+    return;
+  }
+  if (e.code === 'Escape') { gmCap = null; renderGameKeys(); return; }
+  if (!keyKnown(e.code)) { msgBox('gm-msg', t('That key cannot be used: {0}', e.code), 'err'); gmCap = null; renderGameKeys(); return; }
+  gmKeys[gmCap] = e.code; gmCap = null; msgBox('gm-msg', ''); renderGameKeys();
+});
+$('tp-key').onclick = () => { tpCap = !tpCap; gmCap = null; resetTestKey(); renderGameKeys(); };
+
+$('gm-create').onclick = async () => {
+  const how = $('gm-how').value;
+  const r = await api('/newgame', { name: $('gm-name').value.trim(), how, keys: how === 'keys' ? gmKeys : {}, slope: $('gm-slope').checked, overwrite: $('gm-over').checked });
+  if (!r.ok) {
+    gmErrors('gm-msg', r.data.errors || [r.data.error]); $('gm-result').style.display = 'none';
+    $('gm-over-row').style.display = (r.data.errors || []).some(m => m.includes('already exists')) ? '' : 'none'; return;
+  }
+  gmMade = r.data; $('gm-over-row').style.display = 'none'; $('gm-over').checked = false;
+  msgBox('gm-msg', r.data.usable_now ? t('Game “{0}” created.', r.data.id) : t('Game “{0}” created. To ride it, start Pedalator with --profile {0}.', r.data.id), 'ok');
+  $('gm-files').textContent = r.data.folder + '\n' + r.data.files.join(', '); $('gm-files').style.whiteSpace = 'pre-line';
+  $('gm-result').style.display = ''; $('gm-use').style.display = r.data.usable_now ? '' : 'none';
+  await loadGames(r.data.id);
+};
+$('gm-use').onclick = async () => { const r = await api('/profile/select', { id: gmMade.id }); if (r.ok) msgBox('gm-msg', t('In use.'), 'ok'); else gmErrors('gm-msg', r.data.errors); };
+$('gm-open').onclick = async () => { await api('/games/open', { id: gmMade.id }); };
+$('gm-edit').onclick = async () => { $('ed-game').value = gmMade.id; await fillFiles(); $('ed-text').scrollIntoView({ behavior: 'smooth' }); };
+
+// test panel: the values come with every snapshot
+function updateTestPanel(s) {
+  $('tp-gas').textContent = Math.round(s.gas * 100) + ' %'; $('tp-gas-bar').style.width = Math.round(s.gas * 100) + '%';
+  const dir = (v, neg, pos) => v < 0 ? t(neg) : v > 0 ? t(pos) : '—';
+  $('tp-turn').textContent = dir(s.turn, 'left', 'right'); $('tp-look').textContent = dir(s.look, 'up', 'down');
+  $('tp-buttons').textContent = s.packet.buttons.length ? s.packet.buttons.join(' ') : '—';
+  $('tp-packet').textContent = JSON.stringify(s.packet);
+}
+
+// editor of the generated files
+const edLoaded = { text: '' };
+async function loadGames(select) {
+  edGames = (await api('/games')).data.games || [];
+  const sel = $('ed-game'), keep = select || sel.value; sel.innerHTML = '';
+  for (const g of edGames) sel.add(new Option(g.id, g.id));
+  if (edGames.some(g => g.id === keep)) sel.value = keep;
+  $('ed-empty').style.display = edGames.length ? 'none' : '';
+  await fillFiles();
+}
+async function fillFiles() {
+  const g = edGames.find(g => g.id === $('ed-game').value), sel = $('ed-file'); sel.innerHTML = '';
+  for (const f of (g ? g.files : [])) sel.add(new Option(f, f));
+  await loadFile();
+}
+async function loadFile() {
+  const id = $('ed-game').value, name = $('ed-file').value; msgBox('ed-msg', '');
+  if (!id || !name) { $('ed-text').value = ''; edLoaded.text = ''; $('ed-text').disabled = true; return; }
+  const r = await api('/games/file?id=' + encodeURIComponent(id) + '&name=' + encodeURIComponent(name));
+  $('ed-text').disabled = false; edLoaded.text = r.ok ? r.data.text : ''; $('ed-text').value = edLoaded.text;
+}
+$('ed-game').onchange = fillFiles; $('ed-file').onchange = loadFile;
+$('ed-revert').onclick = () => { $('ed-text').value = edLoaded.text; msgBox('ed-msg', ''); };
+$('ed-save').onclick = async () => {
+  const r = await api('/games/file', { id: $('ed-game').value, name: $('ed-file').value, text: $('ed-text').value });
+  if (r.ok) { edLoaded.text = $('ed-text').value; msgBox('ed-msg', t('Saved.'), 'ok'); } else gmErrors('ed-msg', r.data.errors || [r.data.error]);
+};
+renderGameKeys();
+// ---- Start: choose a game, say how you ride, start and stop the session ----
+const TARGET_NAMES = { openmw: 'OpenMW', keys: 'Keyboard', udp: 'UDP' };
+const ST = { profile: null, trainer: null, click: 'auto', keys: true, udp_out: '' };
+try { Object.assign(ST, JSON.parse(localStorage.getItem('pedalator.start') || '{}')); } catch (e) {}
+const stSave = () => { try { localStorage.setItem('pedalator.start', JSON.stringify(ST)); } catch (e) {} };
+let stProfiles = [], stOpts = null, stPreview = null, stBusy = false, stLoaded = false;
+const sess = () => (S && S.session) || { status: 'idle' };
+const stActive = () => sess().status !== 'idle';
+const stTarget = () => (stProfiles.find(p => p.id === ST.profile) || {}).target;
+
+async function loadStart() {
+  const [pr, op] = await Promise.all([api('/profiles'), api('/session/options')]);
+  stProfiles = (pr.data.profiles || []); stOpts = op.data; stPreview = null;
+  if (stOpts.openmw && !stOpts.openmw.found && stOpts.openmw.cfg) stPreview = (await api('/install/openmw')).data;
+  if (!ST.udp_out) ST.udp_out = (stOpts.defaults || {}).udp_out || '127.0.0.1:27200';
+  if (ST.trainer === null) ST.trainer = stOpts.bluetooth ? 'pc' : 'simulate';
+  if (!stProfiles.some(p => p.id === ST.profile)) ST.profile = (stProfiles.find(p => p.id === pr.data.active) || stProfiles[0] || {}).id || null;
+  stLoaded = true; renderStart();
+  if (!stActive() && ST.profile) await api('/profile/select', { id: ST.profile });   // so Controls and Game show this game
+}
+function renderStart() {
+  if (!stLoaded) return;
+  const active = stActive();
+  $('st-step1').classList.toggle('locked', active); $('st-step2').classList.toggle('locked', active);
+  const box = $('st-games'); box.innerHTML = '';
+  for (const p of stProfiles) {
+    const b = document.createElement('button');
+    b.className = 'gcard' + (p.id === ST.profile ? ' sel' : ''); b.setAttribute('aria-pressed', p.id === ST.profile);
+    b.disabled = active;
+    const n = document.createElement('div'); n.className = 'gname'; n.textContent = p.name + (p.user ? ' ★' : '');
+    const g = document.createElement('span'); g.className = 'badge'; g.textContent = t(TARGET_NAMES[p.target] || p.target);
+    b.appendChild(n); b.appendChild(g);
+    b.onclick = async () => { ST.profile = p.id; stSave(); renderStart(); await api('/profile/select', { id: p.id }); };
+    box.appendChild(b);
+  }
+  if (!stProfiles.length) { const d = document.createElement('div'); d.className = 'hint'; d.textContent = t('No games yet. Create the first one with “New game”.'); box.appendChild(d); }
+  for (const [id, key] of [['st-trainer', 'trainer'], ['st-click', 'click']])
+    document.querySelectorAll('#' + id + ' button').forEach(b => {
+      b.classList.toggle('on', b.dataset.v === ST[key]); b.setAttribute('aria-pressed', b.dataset.v === ST[key]); b.disabled = active;
+      if (id === 'st-trainer' && b.dataset.v === 'pc' && stOpts && !stOpts.bluetooth) b.disabled = true;
+    });
+  const th = { simulate: 'A made-up rider: try a game without a trainer.', pc: 'Needs a Bluetooth 5 adapter. No adapter? Pick Phone or Simulated.',
+                phone: 'A phone or laptop with Web Bluetooth reads the trainer (see the phone page address in the log).' };
+  $('st-trainer-hint').textContent = t(th[ST.trainer] || '');
+  const ch = { auto: 'Follows the trainer: this PC for a Bluetooth trainer, the phone for a phone.', pc: 'The PC reads the Click over Bluetooth.',
+               phone: 'The phone or laptop reads the Click, the PC the trainer.', off: 'Without the Click: no buttons, no hill difficulty buttons.' };
+  $('st-click-hint').textContent = t(ch[ST.click] || '');
+  // what this game needs
+  const ex = $('st-extra'); ex.innerHTML = ''; const tg = stTarget();
+  const line = (cls, text) => { const d = document.createElement('div'); d.className = 'hint ' + cls; d.textContent = text; ex.appendChild(d); return d; };
+  if (tg === 'openmw') {
+    if (stOpts && stOpts.openmw.found) line('okc', t('✓ The Pedalator mod is installed in OpenMW: {0}', stOpts.openmw.state));
+    else if (stOpts && !stOpts.openmw.cfg) line('errc', t("✗ OpenMW's settings (openmw.cfg) were not found. Start OpenMW or its launcher once so that it creates them, then reload this page."));
+    else {
+      const box = document.createElement('div'); box.className = 'setup';
+      const h = document.createElement('b'); h.textContent = t('One-time setup: add the Pedalator mod to OpenMW'); box.appendChild(h);
+      const d = document.createElement('div'); d.className = 'hint'; d.style.marginTop = '0';
+      d.textContent = t('The mod passes your pedalling to the game and the slope of the ground back to the trainer. One click copies it and switches it on in your openmw.cfg (a backup of that file is made first).');
+      box.appendChild(d);
+      if (stPreview && stPreview.lines) {
+        const det = document.createElement('details'); const sm = document.createElement('summary'); sm.textContent = t('What exactly will change'); det.appendChild(sm);
+        const pre = document.createElement('pre'); pre.textContent = stPreview.lines.filter(l => !l.startsWith('(dry run')).join('\n'); det.appendChild(pre); box.appendChild(det);
+      }
+      const b = document.createElement('button'); b.className = 'btn primary'; b.style.marginTop = '10px'; b.textContent = t('Install the mod'); b.disabled = active || stBusy;
+      b.onclick = installMod; box.appendChild(b); ex.appendChild(box);
+    }
+  } else if (tg === 'udp') {
+    const d = document.createElement('div'); d.className = 'field'; d.innerHTML = '<div class="flabel"></div>'; d.firstChild.textContent = t('Send to (HOST:PORT)');
+    const i = document.createElement('input'); i.type = 'text'; i.value = ST.udp_out; i.disabled = active; i.style.width = '100%';
+    i.onchange = () => { ST.udp_out = i.value.trim(); stSave(); }; d.appendChild(i); ex.appendChild(d);
+  } else if (tg === 'keys') {
+    const d = document.createElement('label'); d.className = 'field checkrow';
+    const c = document.createElement('input'); c.type = 'checkbox'; c.checked = ST.keys; c.disabled = active; c.onchange = () => { ST.keys = c.checked; stSave(); };
+    const s = document.createElement('span'); s.textContent = t('Press keys in the window in front (the game must be in front)');
+    d.appendChild(c); d.appendChild(s); ex.appendChild(d);
+  }
+  // step 3
+  const prof = stProfiles.find(p => p.id === ST.profile), se = sess();
+  const sum = $('st-summary'); sum.innerHTML = '';
+  const row = (k, v) => { const d = document.createElement('div'); const a = document.createElement('span'); a.className = 'sk'; a.textContent = k + ': '; const b = document.createElement('b'); b.textContent = v; d.appendChild(a); d.appendChild(b); sum.appendChild(d); };
+  const TN = { simulate: 'Simulated', pc: "This PC's Bluetooth", phone: 'Phone' }, CN = { auto: 'Automatic', pc: 'This PC', phone: 'Phone', off: 'None', };
+  if (active) { row(t('Game'), se.profile_name || se.profile_id || '—'); row(t('Trainer'), t(se.trainer === 'simulated' ? 'Simulated' : TN[se.trainer] || se.trainer || '—')); row(t('Zwift Click'), t(CN[se.click] || se.click || '—')); }
+  else { row(t('Game'), prof ? prof.name : '—'); row(t('Trainer'), t(TN[ST.trainer])); row(t('Zwift Click'), t(CN[ST.click])); }
+  const blocked = !prof || (tg === 'openmw' && stOpts && !stOpts.openmw.found);
+  const modOk = !!(stOpts && stOpts.openmw && stOpts.openmw.found);
+  const STEPS = {
+    openmw: [[modOk, 'Add the Pedalator mod to OpenMW (once; the button in step 2)'], [false, 'Start OpenMW and load a save'], [false, 'Press “Start riding” here and pedal']],
+    keys: [[false, 'Press “Start riding” here'], [false, 'Click into the game’s window so that it is in front'], [false, 'Pedal: Pedalator presses the keys set on the Controls tab']],
+    udp: [[false, 'Run the game’s mod or script (the README in its folder, on the Game tab, explains how)'], [false, 'Press “Start riding” here'], [false, 'Pedal: Pedalator sends your power to the game']],
+  };
+  const sl = $('st-steps'); sl.innerHTML = ''; sl.style.display = active ? 'none' : '';
+  for (const [done, text] of (STEPS[tg] || [])) { const li = document.createElement('li'); li.textContent = (done ? '✓ ' : '') + t(text); li.className = done ? 'done' : ''; sl.appendChild(li); }
+  $('st-why').textContent = active ? '' : (!prof ? t('Choose a game first.') : (tg === 'openmw' && !modOk ? t('Add the mod to OpenMW first (step 2).') : ''));
+  $('st-go').style.display = active ? 'none' : ''; $('st-stop').style.display = active ? '' : 'none';
+  $('st-go').disabled = stBusy || blocked; $('st-go').textContent = stBusy ? t('Starting…') : t('Start riding');
+  $('st-stop').disabled = se.status === 'stopping';
+  if (active && se.status === 'error') msgBox('st-msg', t('Something stopped working: {0}', se.error || ''), 'err');
+}
+async function installMod() {
+  stBusy = true; msgBox('st-msg', ''); renderStart();
+  const r = await api('/install/openmw', {});
+  stBusy = false;
+  if (!r.ok) { gmErrors('st-msg', r.data.errors || r.data.lines || [t('The installation failed')]); renderStart(); return; }
+  await loadStart(); msgBox('st-msg', t('✓ Installed. Now start OpenMW, load a save, then press “Start riding”.'), 'ok');
+}
+document.querySelectorAll('#st-trainer button').forEach(b => b.onclick = () => { ST.trainer = b.dataset.v; stSave(); renderStart(); });
+document.querySelectorAll('#st-click button').forEach(b => b.onclick = () => { ST.click = b.dataset.v; stSave(); renderStart(); });
+$('st-go').onclick = async () => {
+  stBusy = true; msgBox('st-msg', ''); renderStart();
+  const r = await api('/session/start', { profile: ST.profile, trainer: ST.trainer, click: ST.click, keys: ST.keys, udp_out: ST.udp_out });
+  stBusy = false;
+  if (!r.ok) { gmErrors('st-msg', r.data.errors || [r.data.error]); renderStart(); return; }
+  S = { ...(S || {}), session: r.data.session }; renderStart(); showTab('ride');
+};
+const stopRide = async () => { const r = await api('/session/stop', {}); if (!r.ok) gmErrors('st-msg', r.data.errors || [r.data.error]); };
+$('st-stop').onclick = stopRide; $('sess-stop').onclick = stopRide;
+$('st-new').onclick = () => { showTab('game'); $('gm-name').focus(); };
+$('st-edit').onclick = () => showTab('controls');
+$('st-import').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  const text = await file.text();
+  let r = await api('/profile/import', { text });
+  if (!r.ok && (r.data.errors || []).some(m => m.includes('already exists')) && confirm(t('A profile with that id already exists. Replace it?'))) r = await api('/profile/import', { text, overwrite: true });
+  if (!r.ok) { gmErrors('st-msg', r.data.errors); return; }
+  ST.profile = r.data.id; stSave(); msgBox('st-msg', t('Imported.'), 'ok'); await loadStart();
+};
+
+// the header chip and the Ride page's banner follow the session
+let lastSess = null;
+function renderSessionChip() {
+  const se = sess(), st = se.status;
+  const txt = { idle: t('No ride'), starting: t('Starting…'), stopping: t('Stopping…'), error: t('Problem'),
+                running: t('Riding: {0}', se.profile_name || se.profile_id || '') }[st] || st;
+  $('d-sess').className = 'dot' + (st === 'running' ? ' on' : (st === 'idle' ? '' : ' warn'));
+  $('t-sess').textContent = txt;
+  $('sess-stop').style.display = (st === 'running' || st === 'error') ? '' : 'none';
+  $('ride-idle').style.display = st === 'idle' ? '' : 'none';
+  $('view-ride').classList.toggle('idle', st === 'idle');
+  const key = st + (se.profile_id || '');
+  if (key !== lastSess) {                                    // a change of state: redraw the Start page, maybe move
+    const was = lastSess; lastSess = key; renderStart();
+    if (was !== null && was.startsWith('running') && st === 'idle' && $('view-ride').style.display !== 'none') showTab('start');
+  }
+}
+$('ride-idle-go').onclick = () => showTab('start');
+if (location.hash === '#start') showTab('start');
 if (location.hash === '#controls') showTab('controls');
+if (location.hash === '#game') showTab('game');
 
 translateDom();
 connect(); frame();

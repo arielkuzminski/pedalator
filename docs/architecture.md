@@ -20,7 +20,8 @@ Everything runs in one Python process: an `asyncio` loop for Bluetooth and the g
 
 | Module | Job |
 |---|---|
-| `cli.py` | command line; wires the tasks together |
+| `cli.py` | command line; starts the dashboard and, when a game or rider is given, a session |
+| `session.py` | the driver session: starts and stops the trainer, Click, game loops and phone servers on demand (the Start page uses it) |
 | `state.py` | the shared state, riding modes, `effective_grade()`, `throttle_for()` |
 | `ftms.py` | FTMS constants, parser of Indoor Bike Data, the simulation command, handlers |
 | `ble.py` | direct Bluetooth LE with `bleak` (scan, connect, write the gradient every second); one scan at a time |

@@ -4,7 +4,7 @@ Pedalator works today with [OpenMW](games/openmw.md), [openOMSI](games/openomsi.
 
 ## Next up
 
-The five milestones the maintainer plans to build first, in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
+The five milestones the maintainer plans to build first (the **Start page** that chooses the game and starts the session from the dashboard is built too: see the changelog), in the order of the suggested path. They are the best places to help, too: open an issue to say you are on one.
 
 > Suggested order: **5 ✅ → 1 (built, awaiting a hardware test) → 2 (built) → 3 → 4**. (5 is small and useful at once; 1 and 2 finish "ride with just a USB adapter or a laptop"; 3 is the biggest piece and 4 builds on it.)
 
@@ -62,7 +62,7 @@ Built-in profiles ship in the package (`morrowind`, `omsi`, `generic-wasd`); you
 
 **Depends on** milestone 3.
 
-**Status.** ✅ The wizard is done (`pedalator new-game`, see [new-game.md](new-game.md)): keys-only games need no code, UDP games get a listener and a Lua sketch. Not built yet: the dashboard version, the test panel with key capture, and the socket-less file/log template.
+**Status.** ✅ The wizard is done (`pedalator new-game`, see [new-game.md](new-game.md)): keys-only games need no code, UDP games get a listener and a Lua sketch. The dashboard's **Game** tab has the same wizard, a live test panel with a key tester and an editor for the generated files. Not built yet: the socket-less file/log template.
 
 **Done when.** A new keys-only game can be added through the wizard without touching Python.
 
