@@ -56,6 +56,21 @@ def start_clock(running: bool) -> None:
     t_start = time.time() if running else None
 
 
+_tap = None
+
+
+def set_tap(fn) -> None:
+    """Install (or, with None, remove) a listener for the flow check (diag.py): ``fn(kind, t, *values)``."""
+    global _tap
+    _tap = fn
+
+
+def tap(kind: str, *values) -> None:
+    """Report an event to the flow check, with a monotonic timestamp. Costs one comparison when nobody listens."""
+    if _tap is not None:
+        _tap(kind, time.perf_counter(), *values)
+
+
 def log(msg: str) -> None:
     line = f"{time.strftime('%H:%M:%S')}  {msg}"
     log_lines.append(line)

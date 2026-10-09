@@ -18,7 +18,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from . import newgame, profiles
+from . import diag, newgame, profiles
 from .paths import WEB_DIR, find_openmw_log, find_openmw_state, openmw_user_dir
 from .session import SessionError, runtime
 from .state import PRESETS, apply_preset, clamp_grade, log, snapshot, state, throttle_for
@@ -116,6 +116,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._json(200, self._install_openmw(dry_run=True))
         elif self.route == "/session/options":
             self._json(200, self._session_options())
+        elif self.route == "/diag":                         # the flow check: state and, when done, the report
+            self._json(200, diag.probe.view())
         elif self.route == "/session/signal":              # a scan: how strong are the trainer and the Click here?
             self._json(*self._signal())
         elif self.route == "/games":
@@ -143,6 +145,27 @@ class DashboardHandler(BaseHTTPRequestHandler):
                            "cfg": str(openmw_user_dir() or "")},
                 "bluetooth": importlib.util.find_spec("bleak") is not None,
                 "defaults": {"udp_out": base.udp_out, "keys": base.keys}, "openmw_log": str(log_file or "")}
+
+    def _diag_start(self, body: dict) -> None:
+        """Record the flow check (diag.py) for 5-120 s while a ride runs."""
+        if runtime.loop is None:
+            return self._json(503, {"error": "the driver is not running in this process"})
+        if state["session"]["status"] != "running":
+            return self._json(409, {"error": "start a ride first: the flow check measures a ride in progress"})
+        try:
+            seconds = float(body.get("seconds", 30))
+        except (TypeError, ValueError):
+            return self._json(400, {"error": "seconds must be a number"})
+        if not 5 <= seconds <= 120:
+            return self._json(400, {"error": "seconds must be between 5 and 120"})
+
+        async def go():
+            diag.start(seconds)
+        try:
+            runtime.call(go())
+        except RuntimeError as e:
+            return self._json(409, {"error": str(e)})
+        self._json(200, diag.probe.view())
 
     def _signal(self) -> tuple[int, dict]:
         if self._session_active:
@@ -222,6 +245,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return self._profile_post(body)
             if self.route.startswith("/session"):
                 return self._session_post(body)
+            if self.route == "/diag/start":
+                return self._diag_start(body)
             if self.route == "/install/openmw":
                 if self._session_active:
                     return self._json(400, {"errors": ["stop the ride before installing"]})

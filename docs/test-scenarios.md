@@ -52,6 +52,7 @@ Unplug/disable the phone's connection to the trainer first (a trainer takes one 
 | B10 | Trainer lost | Turn the trainer off mid-ride | Values go to 0, game stops moving, recovery after power on |
 | B11 | Phone mode | Trainer: Phone; open the phone page, connect | Data flows; Stop closes the phone servers; Start works again |
 | B12 | Long ride | 30 min with OpenMW | No drift in the clock, no memory growth, no dropped connection |
+| B15 | Flow check | Riding on a keyboard game with the trainer, Ride tab → Flow check → Record 30 s while pedalling steadily | Every stage ✓ and the verdict "Smooth"; otherwise the verdict names the stage (Bluetooth, loop, key presses, Windows) |
 | B14 | Signal strength | Start → Check signal strength with the Click awake; then ride | Both devices listed with dBm; the header shows dBm after connecting; a USB extension cable moves the value toward 0 |
 | B13 | Game exit | Close OpenMW mid-ride | Pedalator keeps running; Stop still works |
 

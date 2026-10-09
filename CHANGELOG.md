@@ -5,9 +5,11 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Changed
+- The throttle key's loop asks Windows for 1 ms timer ticks, so it runs every 50 ms instead of 62.5 ms (a finer "gas").
 - The dashboard's default port is now **2137** (was 8765); `--dashboard-port` still sets it.
 
 ### Added
+- **Flow check** (Ride tab, "Flow check"; also `GET /diag`, `POST /diag/start`): records 15-60 s of a ride and times four stages with one clock, the trainer's Bluetooth packets, Pedalator's throttle loop, the key presses it sends and what Windows delivers (a low-level keyboard hook), then names the first stage that is not smooth. Without a trainer, `python -m pedalator.diag` presses a harmless key (F9) with a synthetic rider.
 - **Bluetooth signal strength:** the header shows the dBm the trainer and the Click had when the PC found them (red dot when weak), and the Start page has **Check signal strength**, a short scan for placing the adapter before a ride. Windows gives no signal reading for a connected device, so the header shows the value from the last discovery, not a live one.
 - **Start page (launcher):** `pedalator` with no game or rider now opens only the dashboard. Choose a game, pick the trainer (simulated, this PC's Bluetooth, phone) and the Click, press **Start riding**; **Stop** releases the trainer, the Click, the game's port and the phone servers so another game can be started without restarting. Giving a game or a rider on the command line still starts riding at once; `--launcher` forces the Start page. New `pedalator/session.py`; `--target` no longer defaults to `keys` (a profile alone now brings its own target).
   The Start page explains what to do for each game (numbered steps) and can add the OpenMW mod for you with one button, showing first what will change in `openmw.cfg` (a backup is made).

@@ -235,6 +235,17 @@
       <details open><summary>Raw Indoor Bike Data packet (hex)</summary><pre id="raw">-</pre></details>
       <details open><summary>Event log</summary><pre id="log">-</pre></details>
     </section>
+
+    <section class="card c-wide" id="fc-card">
+      <h2>Flow check</h2>
+      <div class="hint" style="margin-top:0">Is the signal from the pedals to the game smooth? Pedal steadily while it records. It times the trainer's Bluetooth packets, Pedalator's own loop, the key presses it sends and what Windows delivers, and says which stage breaks.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px">
+        <select id="fc-sec" aria-label="Recording length"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="60">60 s</option></select>
+        <button class="btn primary" id="fc-go">Record</button>
+        <span id="fc-prog" class="hint" aria-live="polite"></span>
+      </div>
+      <div id="fc-out"></div>
+    </section>
   </div>
   </div>
 
@@ -378,6 +389,26 @@
 // ---- language: English by default, Polish for Polish browsers (or ?lang=pl) ----
 const LANG = ((new URLSearchParams(location.search).get('lang') || navigator.language || 'en') + '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
 const PL = {
+  'Flow check': 'Test płynności',
+  'Is the signal from the pedals to the game smooth? Pedal steadily while it records. It times the trainer\'s Bluetooth packets, Pedalator\'s own loop, the key presses it sends and what Windows delivers, and says which stage breaks.': 'Czy sygnał z pedałów do gry jest płynny? Pedałuj równo w trakcie nagrywania. Test mierzy pakiety Bluetooth z trenażera, pętlę samego Pedalatora, wysyłane klawisze i to, co dostarcza Windows, a na końcu wskazuje, który etap szwankuje.',
+  'Record': 'Nagraj',
+  'Bluetooth packets': 'Pakiety Bluetooth',
+  'Pedalator\'s loop': 'Pętla Pedalatora',
+  'Key presses sent': 'Wysłane klawisze',
+  'Delivered by Windows': 'Dostarczone przez Windows',
+  '{0} packets while pedalling; typical gap {1} ms, worst {2} ms, gaps over 0.5 s: {3}': '{0} pakietów podczas pedałowania; typowa przerwa {1} ms, najgorsza {2} ms, przerw ponad 0,5 s: {3}',
+  'ticks every {0} ms (should be about 50), worst {1} ms, ticks over 100 ms: {2}': 'tyknięcia co {0} ms (powinno być około 50), najgorsze {1} ms, ponad 100 ms: {2}',
+  '{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average': '{0} wciśnięć, dziur w sygnale: {1} (najgorsza {2} ms), gaz odbiega średnio o {3}',
+  '{0} key-down events, delay at worst {1} ms, longest gap between them {2} ms': '{0} zdarzeń wciśnięcia, opóźnienie w najgorszym razie {1} ms, najdłuższa przerwa między nimi {2} ms',
+  'not measured (Windows only)': 'niemierzone (tylko Windows)',
+  'Recording… {0} / {1} s': 'Nagrywanie… {0} / {1} s',
+  'The recording could not start': 'Nie udało się rozpocząć nagrywania',
+  'Smooth: every stage delivered evenly. If the game still stutters, the cause is in the receiving program (a text box, for one, adds its own key-repeat delay).': 'Płynnie: każdy etap dostarczał równo. Jeśli gra nadal się zacina, przyczyna leży w programie odbierającym (pole tekstowe samo dodaje opóźnienie powtarzania klawisza).',
+  'Not enough data. Start a ride with the trainer and pedal steadily during the whole recording.': 'Za mało danych. Zacznij jazdę z trenażerem i pedałuj równo przez całe nagrywanie.',
+  'Bluetooth: the trainer\'s packets arrive with gaps. Move the adapter closer (a USB extension cable) or read the trainer with the phone.': 'Bluetooth: pakiety z trenażera przychodzą z przerwami. Przybliż adapter (przedłużka USB) albo czytaj trenażer telefonem.',
+  'Pedalator\'s own loop stalls: something on this PC blocks it for over 0.15 s. Close heavy programs and send this table to the developer.': 'Pętla samego Pedalatora się zacina: coś na tym komputerze blokuje ją na ponad 0,15 s. Zamknij ciężkie programy i wyślij tę tabelę twórcy.',
+  'The key presses have holes while you pedal. Send this table to the developer.': 'W wysyłanych klawiszach są dziury, gdy pedałujesz. Wyślij tę tabelę twórcy.',
+  'Windows delivers the key presses late (over 150 ms): the PC is busy, or an input filter (an overlay, a macro tool) is in the way.': 'Windows dostarcza klawisze z opóźnieniem (ponad 150 ms): komputer jest zajęty albo przeszkadza filtr wejścia (nakładka, program do makr).',
   'Bluetooth range': 'Zasięg Bluetooth',
   'Check signal strength': 'Sprawdź siłę sygnału',
   'Signal strong when found': 'Sygnał silny przy znalezieniu',
@@ -1186,6 +1217,55 @@ function renderSessionChip() {
   }
 }
 $('ride-idle-go').onclick = () => showTab('start');
+
+// ---- Flow check: which stage of pedals -> game is not smooth ----
+let fcTimer = null;
+const FC_VERDICT = {
+  ok: 'Smooth: every stage delivered evenly. If the game still stutters, the cause is in the receiving program (a text box, for one, adds its own key-repeat delay).',
+  no_data: 'Not enough data. Start a ride with the trainer and pedal steadily during the whole recording.',
+  ble: "Bluetooth: the trainer's packets arrive with gaps. Move the adapter closer (a USB extension cable) or read the trainer with the phone.",
+  loop: "Pedalator's own loop stalls: something on this PC blocks it for over 0.15 s. Close heavy programs and send this table to the developer.",
+  keys: 'The key presses have holes while you pedal. Send this table to the developer.',
+  os_latency: 'Windows delivers the key presses late (over 150 ms): the PC is busy, or an input filter (an overlay, a macro tool) is in the way.',
+};
+function renderFlow(v) {
+  const out = $('fc-out'); out.innerHTML = '';
+  if (v.error) { const d = document.createElement('div'); d.className = 'hint errc'; d.textContent = v.error; out.appendChild(d); }
+  const r = v.report; if (!r) return;
+  const rows = [
+    [t('Bluetooth packets'), r.ble.over_1s === 0 && r.ble.over_500ms <= 2,
+      t('{0} packets while pedalling; typical gap {1} ms, worst {2} ms, gaps over 0.5 s: {3}', r.ble.pedalling, r.ble.p50, r.ble.max, r.ble.over_500ms)],
+    [t("Pedalator's loop"), r.loop.over_200ms === 0 && r.loop.max <= 150,
+      t('ticks every {0} ms (should be about 50), worst {1} ms, ticks over 100 ms: {2}', r.loop.p50, r.loop.max, r.loop.over_100ms)],
+    [t('Key presses sent'), r.keys.holes === 0 || r.keys.worst_hole_ms <= 200,
+      t('{0} presses, holes in the signal: {1} (worst {2} ms), gas off by {3} on average', r.keys.presses, r.keys.holes, r.keys.worst_hole_ms, r.keys.gas_error)],
+    [t('Delivered by Windows'), r.os.available ? r.os.latency_max_ms <= 150 : null,
+      r.os.available ? t('{0} key-down events, delay at worst {1} ms, longest gap between them {2} ms', r.os.downs, r.os.latency_max_ms, r.os.worst_gap_ms) : t('not measured (Windows only)')],
+  ];
+  const tb = document.createElement('table'); tb.className = 'map';
+  for (const [name, ok, text] of rows) {
+    const tr = document.createElement('tr');
+    const a = document.createElement('td'); a.textContent = name;
+    const m = document.createElement('td'); m.textContent = ok === null ? '–' : (ok ? '✓' : '✗'); m.className = ok === false ? 'err' : (ok ? 'ok' : '');
+    const b = document.createElement('td'); b.textContent = text;
+    tr.appendChild(a); tr.appendChild(m); tr.appendChild(b); tb.appendChild(tr);
+  }
+  out.appendChild(tb);
+  const vd = document.createElement('div'); vd.style.marginTop = '12px'; vd.style.fontSize = '15px'; vd.className = r.verdict.code === 'ok' ? 'ok' : 'err';
+  vd.textContent = t(FC_VERDICT[r.verdict.code] || r.verdict.code); out.appendChild(vd);
+}
+async function pollFlow() {
+  const r = await api('/diag'); if (!r.ok) return;
+  const v = r.data, rec = v.status === 'recording';
+  $('fc-go').disabled = rec; $('fc-prog').textContent = rec ? t('Recording… {0} / {1} s', Math.floor(v.elapsed), Math.round(v.seconds)) : '';
+  if (rec) { fcTimer = setTimeout(pollFlow, 500); } else { fcTimer = null; renderFlow(v); }
+}
+$('fc-go').onclick = async () => {
+  $('fc-out').innerHTML = '';
+  const r = await api('/diag/start', { seconds: parseInt($('fc-sec').value, 10) });
+  if (!r.ok) { const d = document.createElement('div'); d.className = 'hint errc'; d.textContent = r.data.error || t('The recording could not start'); $('fc-out').appendChild(d); return; }
+  pollFlow();
+};
 if (location.hash === '#start') showTab('start');
 if (location.hash === '#controls') showTab('controls');
 if (location.hash === '#game') showTab('game');

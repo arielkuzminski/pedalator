@@ -10,7 +10,7 @@ import sys
 import time
 
 from . import keynames
-from .state import log, state, throttle_for
+from .state import log, state, tap, throttle_for
 
 # slot -> (scan code, extended). Filled from the profile; these are OMSI's own keys until one is applied.
 BINDINGS: dict[str, tuple[int, bool]] = {
@@ -51,6 +51,7 @@ def key(slot: str, down: bool) -> None:
             _warned = True
             log("key output works on Windows only (see docs/roadmap.md for Linux/macOS)")
         return
+    tap("key", slot, down)
     scan, extended = BINDINGS[slot]
     flags = 0x0008 | (0x0001 if extended else 0) | (0 if down else 0x0002)   # SCANCODE | EXTENDEDKEY | KEYUP
     i = _IN(type=1, ki=_KI(0, scan, flags, 0, None))
@@ -60,9 +61,11 @@ def key(slot: str, down: bool) -> None:
 async def throttle_loop(floor: float = 15.0) -> None:
     """~20 Hz PWM of the throttle key: the share of time it is down is the rider's 'gas'."""
     period = 0.05
+    fine = _fine_timer(True)               # without it Windows sleeps in 15.6 ms steps and the 50 ms period becomes 62.5 ms
     try:
         while True:
             duty = throttle_for(state["power"], floor)
+            tap("duty", duty)
             if duty > 0:
                 key("throttle", True)
                 await asyncio.sleep(period * duty)
@@ -71,6 +74,18 @@ async def throttle_loop(floor: float = 15.0) -> None:
                 await asyncio.sleep(period * (1 - duty))
     finally:
         key("throttle", False)
+        _fine_timer(False, fine)
+
+
+def _fine_timer(on: bool, was: bool = True) -> bool:
+    """Ask Windows for 1 ms timer ticks (and give them back); True when it was asked."""
+    if sys.platform != "win32" or not was:
+        return False
+    try:
+        (ctypes.windll.winmm.timeBeginPeriod if on else ctypes.windll.winmm.timeEndPeriod)(1)
+        return on
+    except OSError:
+        return False
 
 
 def wanted_slots(raw) -> set[str]:
